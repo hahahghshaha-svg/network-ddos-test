@@ -3,129 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>☢️ EDGE-FLOW v9.1 NEXUS</title>
+    <title>☢️ EDGE-FLOW v10.0 NEXUS</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --neon: #00ff41; --bg: #030303; --panel: #0a0a0a; --border: #1a1a1a; --warn: #ff3e3e; --scan: #00d4ff; --recon: #f0f000; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background: var(--bg); color: var(--neon); font-family: 'SF Pro Display', sans-serif; margin: 0; padding: 10px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 8px 5px; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
-        #statusText { padding: 2px 6px; border-radius: 4px; border: 1px solid var(--neon); font-size: 0.8em; transition: 0.3s; }
-        .main-panel { display: flex; flex-direction: column; gap: 10px; flex-grow: 1; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 5px; border-bottom: 2px solid var(--border); margin-bottom: 10px; }
+        #statusText { padding: 2px 8px; border-radius: 4px; border: 1px solid var(--neon); font-size: 0.8em; font-weight: bold; }
+        .main-panel { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; overflow-y: auto; }
         .control-block { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
-        label { display: block; margin-bottom: 4px; font-size: 0.75em; color: #888; text-transform: uppercase; }
-        input[type="text"] { background: #000; border: 1px solid var(--border); color: var(--neon); padding: 12px; width: 100%; border-radius: 6px; font-size: 1.05em; outline: none; }
-        .btn-group { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-top: 10px; }
+        label { display: block; margin-bottom: 4px; font-size: 0.7em; color: #666; text-transform: uppercase; }
+        input { background: #000; border: 1px solid var(--border); color: var(--neon); padding: 12px; width: 100%; border-radius: 6px; font-size: 1em; outline: none; }
+        .btn-group { display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-top: 8px; }
         button { border-radius: 6px; border: none; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: 0.1s; }
-        #startBtn { background: var(--neon); color: #000; width: 100%; padding: 18px; font-size: 1.2em; margin-bottom: 8px; box-shadow: 0 0 15px rgba(0,255,65,0.2); }
+        #startBtn { background: var(--neon); color: #000; width: 100%; padding: 16px; font-size: 1.1em; margin-bottom: 5px; }
         #reconBtn { background: var(--recon); color: #000; padding: 12px; }
         #stopBtn { background: #1a1a1a; color: var(--warn); border: 1px solid var(--warn); padding: 12px; }
-        .dashboard { flex-grow: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 300px; }
+        
+        /* 대시보드 레이아웃 */
+        .dashboard { flex-grow: 1; display: grid; grid-template-rows: auto 1fr 1fr; gap: 8px; }
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .stat-card { background: #111; border: 1px solid #222; border-radius: 6px; padding: 10px; text-align: center; }
-        .stat-label { font-size: 0.65em; color: #666; margin-bottom: 2px; }
-        .stat-value { font-size: 1.5em; font-weight: 800; letter-spacing: -1px; }
-        .chart-container { flex-grow: 1; background: #000; border: 1px solid #222; border-radius: 6px; padding: 5px; position: relative; }
-        #terminal { background: #050505; border: 1px solid #222; border-radius: 6px; padding: 8px; height: 60px; overflow-y: auto; font-family: monospace; font-size: 10px; }
+        .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+        .stat-label { font-size: 0.6em; color: #555; margin-bottom: 2px; }
+        .stat-value { font-size: 1.4em; font-weight: 800; letter-spacing: -1px; }
+        
+        .chart-box { background: #000; border: 1px solid var(--border); border-radius: 8px; padding: 8px; position: relative; min-height: 120px; }
+        .chart-title { position: absolute; top: 5px; left: 10px; font-size: 0.6em; color: #444; z-index: 10; }
+        #terminal { background: #050505; border: 1px solid #222; border-radius: 6px; padding: 5px; height: 50px; overflow-y: auto; font-family: monospace; font-size: 9px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1 style="margin:0; font-size:1.1em;">[ EDGE-FLOW C2 v9.1 ]</h1>
-        <span id="statusText">STANDBY</span>
+        <h1 style="margin:0; font-size:1em;">[ EDGE-FLOW C2 v10.0 ]</h1>
+        <span id="statusText">READY</span>
     </div>
 
     <div class="main-panel">
         <div class="control-block">
-            <label>TARGET IP (http://1.2.3.4/)</label>
-            <input type="text" id="target" value="http://" placeholder="http://아이피주소/">
-        </div>
-
-        <div class="control-block">
-            <button id="startBtn" onclick="initiate()">MISSION START</button>
+            <label>TARGET COMMAND</label>
+            <input type="text" id="target" value="http://" placeholder="http://target-ip/">
             <div class="btn-group">
-                <button id="reconBtn" onclick="analyzeTarget()">IP RECON</button>
+                <button id="reconBtn" onclick="analyzeTarget()">RECON</button>
                 <button id="stopBtn" onclick="terminate()">STOP</button>
             </div>
         </div>
+        <button id="startBtn" onclick="initiate()">INITIATE TOTAL WAR</button>
 
         <div class="dashboard">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <div class="stat-label">PAYLOAD SENT</div>
+                    <div class="stat-label">TOTAL PAYLOAD</div>
                     <div class="stat-value" id="shotCount">0</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">LATENCY</div>
+                    <div class="stat-label">LATENCY (MS)</div>
                     <div class="stat-value" id="latencyDisplay">--</div>
                 </div>
             </div>
-            <div class="chart-container">
+            
+            <div class="chart-box">
+                <div class="chart-title">TRAFFIC LOAD (PPS)</div>
+                <canvas id="trafficChart"></canvas>
+            </div>
+            
+            <div class="chart-box">
+                <div class="chart-title">TARGET LATENCY (MS)</div>
                 <canvas id="latencyChart"></canvas>
             </div>
-            <div id="terminal">>> Ready for IP Reconnaissance...</div>
+            
+            <div id="terminal">>> Dual-Core Monitoring System Online...</div>
         </div>
     </div>
 
     <script>
         let attackInterval = null;
         let totalShots = 0;
-        let latencyChart;
-        let chartData = { labels: [], datasets: [{ label: 'ms', data: [], borderColor: '#00ff41', borderWidth: 2, tension: 0.3, fill: true, backgroundColor: 'rgba(0,255,65,0.05)' }] };
+        let lastShots = 0;
+        let trafficChart, latencyChart;
 
         window.onload = function() {
-            const ctx = document.getElementById('latencyChart').getContext('2d');
-            latencyChart = new Chart(ctx, { type: 'line', data: chartData, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#111' } }, x: { display: false } }, plugins: { legend: { display: false } } } });
+            trafficChart = createChart('trafficChart', '#00ff41', 'PPS');
+            latencyChart = createChart('latencyChart', '#f0f000', 'ms');
+            
+            // 1초마다 화력 그래프 업데이트
+            setInterval(() => {
+                if(attackInterval) {
+                    const pps = totalShots - lastShots;
+                    updateChart(trafficChart, pps);
+                    lastShots = totalShots;
+                }
+            }, 1000);
         };
 
-        function log(msg, isErr = false) {
+        function createChart(id, color, label) {
+            const ctx = document.getElementById(id).getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: { labels: Array(20).fill(''), datasets: [{ data: Array(20).fill(0), borderColor: color, borderWidth: 2, tension: 0.4, fill: true, backgroundColor: color + '11', pointRadius: 0 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#111' }, ticks: { display: false } }, x: { display: false } }, plugins: { legend: { display: false } } }
+            });
+        }
+
+        function updateChart(chart, value) {
+            chart.data.datasets[0].data.push(value);
+            chart.data.datasets[0].data.shift();
+            chart.update('none');
+        }
+
+        function log(msg, err = false) {
             const term = document.getElementById('terminal');
             const div = document.createElement('div');
-            div.style.color = isErr ? 'var(--warn)' : 'var(--neon)';
+            div.style.color = err ? 'var(--warn)' : 'var(--neon)';
             div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
             term.prepend(div);
         }
 
-        // [IP 전용 정찰 엔진]
         async function analyzeTarget() {
             let target = document.getElementById('target').value.trim();
-            if (!target.startsWith('http')) { log("URL ERROR: http:// 필수", true); return; }
-            
-            log("📡 IP RECONNAISSANCE START...");
+            if (!target.startsWith('http')) return;
+            log("📡 SCANNING...");
             const start = Date.now();
-            
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 5000);
-
-                // IP 주소의 경우 80포트로 직접 찔러 보안 에러를 유도하여 시간을 측정합니다.
                 await fetch(target, { mode: 'no-cors', cache: 'no-store', signal: controller.signal });
-                
                 const ms = Date.now() - start;
                 clearTimeout(timeout);
-                updateUI(ms);
+                updateLatency(ms);
             } catch (e) {
                 const ms = Date.now() - start;
-                // 에러가 나더라도 시간이 5초 미만이면 서버가 응답(거부)은 한 것입니다.
-                if (ms < 5000) {
-                    updateUI(ms);
-                    log(`🟢 RESPONSE DETECTED: ${ms}ms`);
-                } else {
-                    updateUI(9999, "💀 DOWN");
-                    log("💀 TARGET UNRESPONSIVE", true);
-                }
+                if (ms < 5000) updateLatency(ms);
+                else { updateLatency(9999); log("💀 DOWN", true); }
             }
         }
 
-        function updateUI(ms, label = null) {
-            const display = document.getElementById('latencyDisplay');
-            display.innerText = label || `${ms}ms`;
-            display.style.color = ms > 1000 ? 'var(--warn)' : 'var(--neon)';
-            
-            chartData.labels.push("");
-            chartData.datasets[0].data.push(ms === 9999 ? null : ms);
-            if (chartData.labels.length > 15) { chartData.labels.shift(); chartData.datasets[0].data.shift(); }
-            latencyChart.update();
+        function updateLatency(ms) {
+            document.getElementById('latencyDisplay').innerText = ms === 9999 ? "DOWN" : ms;
+            updateChart(latencyChart, ms === 9999 ? 0 : ms);
         }
 
         function initiate() {
@@ -145,9 +160,9 @@
 
         function terminate() {
             clearInterval(attackInterval);
-            document.getElementById('statusText').innerText = "STANDBY";
+            document.getElementById('statusText').innerText = "READY";
             document.getElementById('statusText').style.color = "var(--neon)";
-            log("🛑 MISSION STOPPED", true);
+            log("🛑 STOPPED", true);
         }
     </script>
 </body>
